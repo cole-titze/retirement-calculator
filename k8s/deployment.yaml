@@ -2,10 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: retirement-calculator
+  namespace: retirement-calculator
   labels:
     app: retirement-calculator
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: retirement-calculator
@@ -14,11 +15,33 @@ spec:
       labels:
         app: retirement-calculator
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: retirement-calculator
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: retirement-calculator
           image: ghcr.io/cole-titze/retirement-calculator:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 30
           resources:
             requests:
               memory: "32Mi"
@@ -31,7 +54,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: retirement-calculator
+  namespace: retirement-calculator
 spec:
+  type: ClusterIP
   selector:
     app: retirement-calculator
   ports:
@@ -39,19 +64,30 @@ spec:
       port: 80
       targetPort: 80
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: policy/v1
+kind: PodDisruptionBudget
 metadata:
   name: retirement-calculator
+  namespace: retirement-calculator
 spec:
-  rules:
-    - host: retirement-calculator.kubecluster
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: retirement-calculator
-                port:
-                  number: 80
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: retirement-calculator
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: retirement-calculator
+  namespace: retirement-calculator
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`retirement-calculator.kubecluster`)
+      kind: Rule
+      services:
+        - name: retirement-calculator
+          port: 80
+  tls:
+    secretName: local-cert
