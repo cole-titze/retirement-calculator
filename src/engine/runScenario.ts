@@ -68,7 +68,12 @@ export function runScenario({
 
         if (hasHouse && age === houseBuyAge && mo === 0) {
           const tn = DOWN_PAYMENT + CLOSING;
-          s >= tn ? (s -= tn) : (t -= tn - s, s = 0);
+          if (s >= tn) {
+            s -= tn;
+          } else {
+            t -= tn - s;
+            s = 0;
+          }
           hv = HOME_PRICE;
         }
 
@@ -121,9 +126,12 @@ export function runScenario({
     if (isAccumulating) {
       if (hasHouse && age === houseBuyAge) {
         const totalNeeded = DOWN_PAYMENT + CLOSING;
-        sgov >= totalNeeded
-          ? (sgov -= totalNeeded)
-          : (taxable -= totalNeeded - sgov, sgov = 0);
+        if (sgov >= totalNeeded) {
+          sgov -= totalNeeded;
+        } else {
+          taxable -= totalNeeded - sgov;
+          sgov = 0;
+        }
         homeValue = HOME_PRICE;
         homeEquity = DOWN_PAYMENT;
       }
@@ -145,9 +153,12 @@ export function runScenario({
     }
 
     if (isBridge) {
-      taxable >= retireSpend
-        ? (taxable -= retireSpend)
-        : (company = Math.max(0, company - (retireSpend - taxable)), taxable = 0);
+      if (taxable >= retireSpend) {
+        taxable -= retireSpend;
+      } else {
+        company = Math.max(0, company - (retireSpend - taxable));
+        taxable = 0;
+      }
     }
 
     if (isRetired) {

@@ -1,5 +1,9 @@
 # FIRE Calculator
 
+[![Lint](https://github.com/cole-titze/retirement-calculator/actions/workflows/lint.yml/badge.svg)](https://github.com/cole-titze/retirement-calculator/actions/workflows/lint.yml)
+[![Test](https://github.com/cole-titze/retirement-calculator/actions/workflows/test.yml/badge.svg)](https://github.com/cole-titze/retirement-calculator/actions/workflows/test.yml)
+[![Container](https://github.com/cole-titze/retirement-calculator/actions/workflows/build.yml/badge.svg)](https://github.com/cole-titze/retirement-calculator/actions/workflows/build.yml)
+
 A personal retirement scenario planner built with React + Recharts.
 
 ## Features
