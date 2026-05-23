@@ -1,327 +1,19 @@
 import { useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
+} from "recharts";
+import { getBase } from "./engine/getBase";
+import { runScenario } from "./engine/runScenario";
+import { SCENARIO_DEFS } from "./scenarios";
+import { CustomTooltip } from "./components/CustomTooltip";
+import { fmtM } from "./utils";
+import type { ScenarioResult } from "./types";
 
-// ─── Constants ───────────────────────────────────────────────
-const GROWTH = 0.07;
-const METALS_GROWTH = 0.05;
-const SGOV_GROWTH = 0.045;
-
-// Portfolio allocation weights (must sum to 100); getBase() scales these
-// proportionally to whatever the user enters as starting assets.
-// Adjust weights to match your actual allocation.
-const BASE_DEFAULT = {
-  yourRoth: 40,
-  wifeTraditional: 0,
-  taxable: 25,
-  company: 18,
-  metals: 4,
-  sgov: 13,
-};
-const BASE_DEFAULT_TOTAL = Object.values(BASE_DEFAULT).reduce((a, b) => a + b, 0);
-
-function getBase(totalAssets) {
-  const scale = totalAssets / BASE_DEFAULT_TOTAL;
-  return {
-    yourRoth: Math.round(BASE_DEFAULT.yourRoth * scale),
-    wifeTraditional: Math.round(BASE_DEFAULT.wifeTraditional * scale),
-    taxable: Math.round(BASE_DEFAULT.taxable * scale),
-    company: Math.round(BASE_DEFAULT.company * scale),
-    metals: Math.round(BASE_DEFAULT.metals * scale),
-    sgov: Math.round(BASE_DEFAULT.sgov * scale),
-  };
-}
-
-// Monthly contribution amounts per bucket.
-// yourRoth defaults to the 2025 IRS Roth 401k max; set others to match your situation.
-const MONTHLY_BASE = {
-  yourRoth: 1958,
-  wifeTraditional: 0,
-  taxable: 0,
-  metals: 0,
-};
-
-// House params
-const HOME_PRICE = 450000;
-const DOWN_PAYMENT = 45000;   // 10%
-const CLOSING = 9000;
-const MORTGAGE_MONTHLY = 3000;
-const HOME_APPRECIATION = 0.03;
-const PROP_TAX_INS = 600;     // /mo
-
-// Kids params
-const CHILDCARE_PER_KID = 1800;  // /mo per kid ages 0-5
-const KID_COST_SCHOOL = 1100;    // /mo per kid ages 6-17
-const COLLEGE_PER_KID = 25000;   // lump sum at age 18 per kid
-
-// Retirement spending
-const RETIRE_SPEND_BASE = 100000;
-const RETIRE_SPEND_HOUSE = 100000;
-const RETIRE_SPEND_KIDS = 100000;
-
-// ─── Scenario Engine ────────────────────────────────────────
-function runScenario({ hasHouse, numKids, label, color, retireSpend, currentAge = 30, mortgagePremium = 1500, postCoastInvest = 0, rentAmount = 1500, retireAge = 50, inflationRate = 0, withdrawalRate = 0.04, base = BASE_DEFAULT }) {
-  const houseBuyAge = 28;
-  const kid1BirthAge = hasHouse ? 30 : 29;
-  const kid2BirthAge = kid1BirthAge + 2;
-  const rothAge = 59.5;
-  const bridgeYears = Math.max(0, rothAge - retireAge);
-  const growth = Math.max(0, GROWTH - inflationRate); // real return rate
-
-  function getMonthlyInvestable(age, coasting = false) {
-    let roth = MONTHLY_BASE.yourRoth;
-    let wifeTrad = MONTHLY_BASE.wifeTraditional;
-    let taxable = MONTHLY_BASE.taxable;
-    let metals = MONTHLY_BASE.metals;
-
-    if (coasting) {
-      const total = postCoastInvest;
-      roth = Math.min(MONTHLY_BASE.yourRoth, total);
-      wifeTrad = Math.min(MONTHLY_BASE.wifeTraditional, Math.max(0, total - roth));
-      metals = Math.min(MONTHLY_BASE.metals, Math.max(0, total - roth - wifeTrad));
-      taxable = Math.max(0, total - roth - wifeTrad - metals);
-      return { roth, wifeTrad, taxable, metals };
-    }
-
-    if (hasHouse && age < houseBuyAge) {
-      taxable -= 3000;
-    }
-    if (hasHouse && age >= houseBuyAge) {
-      const mortgagePaidOff = houseBuyAge + 30;
-      if (age < mortgagePaidOff) {
-        taxable -= mortgagePremium;
-      } else {
-        taxable -= Math.max(-3000, PROP_TAX_INS - rentAmount);
-      }
-    }
-
-    if (numKids >= 1) {
-      const k1Age = age - kid1BirthAge;
-      if (k1Age >= 0 && k1Age <= 5) taxable -= CHILDCARE_PER_KID;
-      else if (k1Age > 5 && k1Age <= 17) taxable -= KID_COST_SCHOOL;
-    }
-
-    if (numKids >= 2) {
-      const k2Age = age - kid2BirthAge;
-      if (k2Age >= 0 && k2Age <= 5) taxable -= CHILDCARE_PER_KID;
-      else if (k2Age > 5 && k2Age <= 17) taxable -= KID_COST_SCHOOL;
-    }
-
-    taxable = Math.max(0, taxable);
-    return { roth, wifeTrad, taxable, metals };
-  }
-
-  // ── First pass: find coast FIRE to month precision ──
-  let coastFireAge = null;
-  let coastFireMonth = null;
-  {
-    const MONTHLY_GROWTH = Math.pow(1 + growth, 1/12);
-    const MONTHLY_GROWTH_METALS = Math.pow(1 + METALS_GROWTH, 1/12);
-    let r = base.yourRoth, w = base.wifeTraditional, t = base.taxable;
-    let c = base.company, m = base.metals, s = base.sgov;
-    let hv = 0;
-
-    const fireNum = retireSpend / withdrawalRate;
-
-    outer: for (let age = currentAge; age <= retireAge; age++) {
-      for (let mo = 0; mo < 12; mo++) {
-        const fracAge = age + mo / 12;
-
-        r *= MONTHLY_GROWTH; w *= MONTHLY_GROWTH; t *= MONTHLY_GROWTH;
-        c *= age < 35 ? 1.0 : Math.pow(1.04, 1/12);
-        m *= MONTHLY_GROWTH_METALS;
-        if (hv > 0) hv *= Math.pow(1 + HOME_APPRECIATION, 1/12);
-
-        if (hasHouse && age === houseBuyAge && mo === 0) {
-          const tn = DOWN_PAYMENT + CLOSING;
-          s >= tn ? (s -= tn) : (t -= tn - s, s = 0);
-          hv = HOME_PRICE;
-        }
-
-        if (mo === 0) {
-          if (numKids >= 1 && age - kid1BirthAge === 18) t -= COLLEGE_PER_KID;
-          if (numKids >= 2 && age - kid2BirthAge === 18) t -= COLLEGE_PER_KID;
-        }
-
-        const yearsLeft = Math.max(0, retireAge - fracAge);
-        const totalNow = r + w * 0.8 + t + c + m + s;
-        const projected = totalNow * Math.pow(1 + growth, yearsLeft);
-
-        if (!coastFireAge && projected >= fireNum) {
-          coastFireAge = age;
-          coastFireMonth = mo;
-          break outer;
-        }
-
-        const contrib = getMonthlyInvestable(fracAge);
-        r += contrib.roth; w += contrib.wifeTrad;
-        t += contrib.taxable; m += contrib.metals;
-      }
-    }
-  }
-
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const coastLabel = coastFireAge !== null
-    ? `COAST ${MONTHS[coastFireMonth ?? 0]} ${coastFireAge}`
-    : null;
-
-  // ── Second pass: full simulation ──
-  let yourRoth = base.yourRoth, wifeTrad = base.wifeTraditional;
-  let taxable = base.taxable, company = base.company;
-  let metals = base.metals, sgov = base.sgov;
-  let homeEquity = 0, homeValue = 0;
-  const data = [];
-
-  for (let age = currentAge; age <= 70; age++) {
-    const isAccumulating = age < retireAge;
-    const isBridge = age >= retireAge && age < 60;
-    const isRetired = age >= 60;
-    const isCoasting = coastFireAge !== null && age >= coastFireAge && isAccumulating;
-
-    yourRoth *= (1 + growth); wifeTrad *= (1 + growth);
-    taxable *= (1 + growth); company *= age < 35 ? 1.0 : 1.04;
-    metals *= (1 + METALS_GROWTH);
-    if (homeValue > 0) homeValue *= (1 + HOME_APPRECIATION);
-
-    if (isAccumulating) {
-      if (hasHouse && age === houseBuyAge) {
-        const totalNeeded = DOWN_PAYMENT + CLOSING;
-        sgov >= totalNeeded ? (sgov -= totalNeeded) : (taxable -= totalNeeded - sgov, sgov = 0);
-        homeValue = HOME_PRICE; homeEquity = DOWN_PAYMENT;
-      }
-
-      if (!isCoasting || postCoastInvest > 0) {
-        const contrib = getMonthlyInvestable(age, isCoasting);
-        yourRoth += contrib.roth * 12;
-        wifeTrad += contrib.wifeTrad * 12;
-        taxable += contrib.taxable * 12;
-        metals += contrib.metals * 12;
-      }
-
-      if (numKids >= 1 && age - kid1BirthAge === 18) taxable -= COLLEGE_PER_KID;
-      if (numKids >= 2 && age - kid2BirthAge === 18) taxable -= COLLEGE_PER_KID;
-
-      if (hasHouse && age >= houseBuyAge) {
-        homeEquity = Math.min(homeEquity + 500 * 12, homeValue);
-      }
-    }
-
-    if (isBridge) {
-      taxable >= retireSpend
-        ? (taxable -= retireSpend)
-        : (company = Math.max(0, company - (retireSpend - taxable)), taxable = 0);
-    }
-
-    if (isRetired) {
-      const totalRetire = yourRoth + wifeTrad;
-      const rothShare = totalRetire > 0 ? yourRoth / totalRetire : 0.6;
-      yourRoth = Math.max(0, yourRoth - retireSpend * rothShare);
-      wifeTrad = Math.max(0, wifeTrad - retireSpend * (1 - rothShare));
-    }
-
-    const liquidTotal = yourRoth + wifeTrad + taxable + company + metals + sgov;
-    data.push({
-      age,
-      total: Math.round(liquidTotal / 1000),
-      netWorth: Math.round((liquidTotal + (hasHouse ? homeEquity : 0)) / 1000),
-      coasting: isCoasting,
-      isCoastPoint: age === coastFireAge,
-      phase: isAccumulating ? 0 : isBridge ? 1 : 2,
-    });
-  }
-
-  function buildPhaseContribs() {
-    const checkAges = [];
-    checkAges.push({ label: `Today (Age ${currentAge})`, age: currentAge });
-    if (hasHouse && currentAge < houseBuyAge) {
-      checkAges.push({ label: `Saving for House (${currentAge}–${houseBuyAge})`, age: currentAge + 1 });
-      checkAges.push({ label: `After House Purchase (${houseBuyAge}+)`, age: houseBuyAge + 1 });
-    }
-    if (numKids >= 1) {
-      checkAges.push({ label: `Kid 1 Childcare (Age ${kid1BirthAge}–${kid1BirthAge+5})`, age: kid1BirthAge + 1 });
-      checkAges.push({ label: `Kid 1 School (Age ${kid1BirthAge+6}–${kid1BirthAge+17})`, age: kid1BirthAge + 7 });
-    }
-    if (numKids >= 2) {
-      checkAges.push({ label: `Both in Childcare (Age ${kid2BirthAge}–${kid1BirthAge+5})`, age: kid2BirthAge + 1 });
-      checkAges.push({ label: `Kid1 School + Kid2 Care`, age: kid1BirthAge + 6 });
-      checkAges.push({ label: `Both Kids in School`, age: kid2BirthAge + 6 });
-    }
-    const lastKidLeave = numKids >= 2 ? kid2BirthAge + 18 : numKids === 1 ? kid1BirthAge + 18 : 0;
-    const stableAge = Math.max(lastKidLeave, hasHouse ? houseBuyAge + 1 : 0, 35);
-    if (stableAge < retireAge) checkAges.push({ label: `Stable (Age ${stableAge}+)`, age: stableAge });
-
-    const seen = new Set();
-    return checkAges.filter(p => {
-      if (seen.has(p.label)) return false;
-      seen.add(p.label);
-      return p.age >= currentAge && p.age < retireAge;
-    }).map(p => {
-      const c = getMonthlyInvestable(p.age);
-      const houseCost = hasHouse && p.age < houseBuyAge ? 3000 : hasHouse ? mortgagePremium : 0;
-      const k1 = numKids >= 1 ? p.age - kid1BirthAge : -1;
-      const k2 = numKids >= 2 ? p.age - kid2BirthAge : -1;
-      const childcare =
-        (k1 >= 0 && k1 <= 5 ? CHILDCARE_PER_KID : k1 > 5 && k1 <= 17 ? KID_COST_SCHOOL : 0) +
-        (k2 >= 0 && k2 <= 5 ? CHILDCARE_PER_KID : k2 > 5 && k2 <= 17 ? KID_COST_SCHOOL : 0);
-      return {
-        label: p.label,
-        age: p.age,
-        snap: {
-          monthlyRoth: c.roth,
-          monthlyWifeTrad: c.wifeTrad,
-          monthlyTaxable: c.taxable,
-          monthlyMetals: c.metals,
-          monthlyHouseSave: hasHouse && p.age < houseBuyAge ? 3000 : 0,
-          monthlyMortgage: hasHouse && p.age >= houseBuyAge ? mortgagePremium : 0,
-          monthlyChildcare: childcare,
-          totalInvested: c.roth + c.wifeTrad + c.taxable + c.metals,
-          totalOut: houseCost + childcare,
-        },
-      };
-    });
-  }
-
-  return { label, color, data, coastFireAge, coastFireMonth, coastLabel, retireSpend, hasHouse, numKids, phaseContribs: buildPhaseContribs() };
-}
-
-// ─── Scenario definitions ────────────────────────────────────
-const SCENARIO_DEFS = [
-  { hasHouse: false, numKids: 0, label: "No House, No Kids", color: "#4ade80", retireSpend: RETIRE_SPEND_BASE },
-  { hasHouse: true,  numKids: 0, label: "House Only",        color: "#60A5FA", retireSpend: RETIRE_SPEND_HOUSE },
-  { hasHouse: true,  numKids: 1, label: "House + 1 Kid",     color: "#F59E0B", retireSpend: RETIRE_SPEND_KIDS },
-  { hasHouse: true,  numKids: 2, label: "House + 2 Kids",    color: "#f87171", retireSpend: RETIRE_SPEND_KIDS },
-];
-
-// ─── Helpers ─────────────────────────────────────────────────
-const fmtM = v => v >= 1000 ? `$${(v / 1000).toFixed(2)}M` : `$${v}k`;
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{
-      background: "#0a0c12",
-      border: "1px solid #1e2235",
-      borderRadius: 8,
-      padding: "12px 16px",
-      fontFamily: "'Courier Prime', monospace",
-      fontSize: 12,
-      minWidth: 220,
-    }}>
-      <div style={{ color: "#64748b", marginBottom: 10, letterSpacing: 2, fontSize: 11 }}>AGE {label}</div>
-      {payload.sort((a, b) => b.value - a.value).map(p => (
-        <div key={p.dataKey} style={{ display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 4, color: p.color }}>
-          <span style={{ color: "#94a3b8", fontSize: 11 }}>{p.name.replace(" (NW)", "")}</span>
-          <span style={{ fontWeight: 600 }}>{fmtM(p.value)}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ─── Component ───────────────────────────────────────────────
 export default function FireScenarios() {
   const [activeScenarios, setActiveScenarios] = useState(SCENARIO_DEFS.map(s => s.label));
   const [showNetWorth, setShowNetWorth] = useState(false);
-  const [hoveredScenario, setHoveredScenario] = useState(null);
+  const [hoveredScenario, setHoveredScenario] = useState<string | null>(null);
   const [contribScenario, setContribScenario] = useState(SCENARIO_DEFS[0].label);
 
   const [currentAge, setCurrentAge] = useState(30);
@@ -344,12 +36,12 @@ export default function FireScenarios() {
   const withdrawalRateDecimal = withdrawalRate / 100;
   const base = getBase(startingAssets);
 
-  const activeData = SCENARIO_DEFS.map(d =>
+  const activeData: ScenarioResult[] = SCENARIO_DEFS.map(d =>
     runScenario({ ...d, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, base })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
-    const row = { age: activeData[0].data[i].age };
+    const row: Record<string, number> = { age: activeData[0].data[i].age };
     activeData.forEach(s => {
       row[s.label] = s.data[i].total;
       row[`${s.label}_nw`] = s.data[i].netWorth;
@@ -357,7 +49,7 @@ export default function FireScenarios() {
     return row;
   });
 
-  const toggleScenario = (label) => {
+  const toggleScenario = (label: string) => {
     setActiveScenarios(prev =>
       prev.includes(label)
         ? prev.length > 1 ? prev.filter(l => l !== label) : prev
@@ -365,8 +57,8 @@ export default function FireScenarios() {
     );
   };
 
-  const atRetire = (s) => s.data.find(d => d.age === retireAge);
-  const atRoth = (s) => s.data.find(d => d.age === 60);
+  const atRetire = (s: ScenarioResult) => s.data.find(d => d.age === retireAge);
+  const atRoth   = (s: ScenarioResult) => s.data.find(d => d.age === 60);
 
   return (
     <div style={{
@@ -461,10 +153,12 @@ export default function FireScenarios() {
             </div>
           </div>
           <div style={{ width: 1, background: "#1e2235", alignSelf: "stretch" }} />
-          {[
-            { label: "Current Rent/mo", value: rent, setter: setRent, color: "#a78bfa", prefix: "$", width: 100 },
-            { label: "Est. Mortgage/mo", value: mortgage, setter: setMortgage, color: "#f472b6", prefix: "$", width: 100 },
-          ].map(({ label, value, setter, color, prefix, width }) => (
+          {(
+            [
+              { label: "Current Rent/mo", value: rent, setter: setRent, color: "#a78bfa", prefix: "$", width: 100 },
+              { label: "Est. Mortgage/mo", value: mortgage, setter: setMortgage, color: "#f472b6", prefix: "$", width: 100 },
+            ] as const
+          ).map(({ label, value, setter, color, prefix, width }) => (
             <div key={label} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <div style={{ fontSize: 10, color, letterSpacing: 2, textTransform: "uppercase" }}>{label}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -722,9 +416,9 @@ export default function FireScenarios() {
                     strokeWidth={hoveredScenario === s.label ? 3 : 2}
                     strokeOpacity={hoveredScenario && hoveredScenario !== s.label ? 0.2 : 1}
                     activeDot={{ r: 5, fill: s.color }}
-                    dot={(props) => {
+                    dot={(props: { cx: number; cy: number; payload: { age: number } }) => {
                       const { cx, cy, payload } = props;
-                      if (payload.age !== coastAge) return null;
+                      if (payload.age !== coastAge) return <g key={`empty-${s.label}-${payload.age}`} />;
                       return (
                         <g key={`coast-${s.label}`}>
                           <circle cx={cx} cy={cy} r={7} fill={s.color} fillOpacity={0.2} stroke={s.color} strokeWidth={2} />
@@ -817,16 +511,16 @@ export default function FireScenarios() {
             if (!s) return null;
             const phases = s.phaseContribs;
             const buckets = [
-              { key: "monthlyRoth", label: "Your Roth 401k", color: "#6EE7B7" },
-              { key: "monthlyWifeTrad", label: "Wife's Trad 401k", color: "#a78bfa" },
-              { key: "monthlyTaxable", label: "Taxable Brokerage", color: "#60A5FA" },
-              { key: "monthlyMetals", label: "Precious Metals", color: "#D97706" },
-            ];
+              { key: "monthlyRoth",     label: "Your Roth 401k",      color: "#6EE7B7" },
+              { key: "monthlyWifeTrad", label: "Wife's Trad 401k",    color: "#a78bfa" },
+              { key: "monthlyTaxable",  label: "Taxable Brokerage",   color: "#60A5FA" },
+              { key: "monthlyMetals",   label: "Precious Metals",     color: "#D97706" },
+            ] as const;
             const costs = [
-              { key: "monthlyHouseSave", label: "House Savings", color: "#a78bfa" },
-              { key: "monthlyMortgage", label: "Mortgage", color: "#f472b6" },
-              { key: "monthlyChildcare", label: "Kids (Childcare/School)", color: "#fb923c" },
-            ];
+              { key: "monthlyHouseSave",  label: "House Savings",           color: "#a78bfa" },
+              { key: "monthlyMortgage",   label: "Mortgage",                color: "#f472b6" },
+              { key: "monthlyChildcare",  label: "Kids (Childcare/School)", color: "#fb923c" },
+            ] as const;
             const colTemplate = `160px repeat(${phases.length}, 1fr)`;
             return (
               <div style={{ background: "#0a0c12", border: `1px solid ${s.color}30`, borderRadius: 10, overflow: "auto" }}>
