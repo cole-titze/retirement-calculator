@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retirement-calculator
+  labels:
+    app: retirement-calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: retirement-calculator
+  template:
+    metadata:
+      labels:
+        app: retirement-calculator
+    spec:
+      containers:
+        - name: retirement-calculator
+          image: ghcr.io/cole-titze/retirement-calculator:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: retirement-calculator
+spec:
+  selector:
+    app: retirement-calculator
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: retirement-calculator
+spec:
+  rules:
+    - host: retirement-calculator.kubecluster
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: retirement-calculator
+                port:
+                  number: 80
