@@ -1,0 +1,664 @@
+// ─── Design tokens ────────────────────────────────────────
+$bg-deep:    #07090f;
+$bg-card:    #0a0c12;
+$bg-input:   #0f1117;
+$border:     #1e2235;
+$border-dim: #111420;
+$text:       #e2e8f0;
+$text-muted: #475569;
+$text-dim:   #334155;
+$text-bright: #f1f5f9;
+$font-mono:  'Courier Prime', monospace;
+$font-serif: 'Playfair Display', serif;
+
+$green:   #4ade80;
+$blue:    #60a5fa;
+$amber:   #f59e0b;
+$red:     #f87171;
+$pink:    #f472b6;
+$purple:  #a78bfa;
+$emerald: #6ee7b7;
+$orange:  #fb923c;
+$gold:    #d97706;
+
+// ─── Root ──────────────────────────────────────────────────
+.root {
+  min-height: 100vh;
+  background: $bg-deep;
+  color: $text;
+  font-family: $font-mono;
+  padding: 36px 20px 60px;
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+// ─── Header ────────────────────────────────────────────────
+.header {
+  margin-bottom: 48px;
+  border-bottom: 1px solid $border;
+  padding-bottom: 32px;
+}
+
+.headerEyebrow {
+  font-size: 10px;
+  letter-spacing: 6px;
+  color: $text-muted;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.headerTitle {
+  font-family: $font-serif;
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.05;
+  color: $text-bright;
+}
+
+.headerSubtitle {
+  color: $text-dim;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.headerDesc {
+  margin-top: 16px;
+  font-size: 13px;
+  color: $text-muted;
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+// ─── Inputs Panel ──────────────────────────────────────────
+.inputsPanel {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 18px 24px;
+  align-items: flex-end;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputLabel {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.labelGreen  { color: $green; }
+.labelAmber  { color: $amber; }
+.labelRed    { color: $red; }
+.labelBlue   { color: $blue; }
+.labelPink   { color: $pink; }
+.labelPurple { color: $purple; }
+
+.inputHint {
+  font-size: 10px;
+  color: $text-dim;
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inputPrefix {
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.input {
+  background: $bg-input;
+  border-radius: 4px;
+  color: $text;
+  font-family: $font-mono;
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  border: 1px solid transparent;
+}
+
+.inputGreen  { border-color: rgba(74, 222, 128, 0.25); }
+.inputAmber  { border-color: rgba(245, 158, 11, 0.25); }
+.inputRed    { border-color: rgba(248, 113, 113, 0.25); }
+.inputBlue   { border-color: rgba(96, 165, 250, 0.25); }
+.inputPink   { border-color: rgba(244, 114, 182, 0.25); }
+.inputPurple { border-color: rgba(167, 139, 250, 0.25); }
+
+.inputSm { width: 60px; }
+.inputMd { width: 70px; }
+.inputLg { width: 100px; }
+.inputXl { width: 110px; }
+
+.divider {
+  width: 1px;
+  background: $border;
+  align-self: stretch;
+}
+
+.mortgagePremiumBlock {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.mortgagePremiumLabel {
+  font-size: 10px;
+  color: $text-muted;
+  letter-spacing: 1px;
+}
+
+.mortgagePremiumAmount {
+  font-size: 20px;
+  font-family: $font-mono;
+  font-weight: 700;
+  color: $text-dim;
+
+  &.positive { color: $pink; }
+}
+
+.mortgagePremiumHint {
+  font-size: 10px;
+  color: $text-dim;
+}
+
+// ─── Scenario Buttons ──────────────────────────────────────
+.scenarioBtnRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.scenarioBtn {
+  padding: 8px 18px;
+  border-radius: 4px;
+  border: 1px solid $border;
+  background: transparent;
+  color: $text-muted;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: $font-mono;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+
+  &:hover { transform: translateY(-1px); }
+
+  &[data-active='true'] {
+    border-color: var(--scenario-color);
+    background: color-mix(in srgb, var(--scenario-color) 8%, transparent);
+    color: var(--scenario-color);
+  }
+}
+
+.scenarioBtnDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $border;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.scenarioBtnDotActive {
+  background: var(--scenario-color);
+}
+
+.toggleBtn {
+  margin-left: auto;
+  padding: 8px 18px;
+  border-radius: 4px;
+  border: 1px solid $border;
+  background: transparent;
+  color: $text-muted;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: $font-mono;
+  transition: all 0.2s ease;
+
+  &[data-active='true'] {
+    border-color: $purple;
+    background: color-mix(in srgb, $purple 8%, transparent);
+    color: $purple;
+  }
+}
+
+// ─── Main Chart ────────────────────────────────────────────
+.chartWrapper {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 28px 12px 20px;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.chartBgOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.chartBgAccum {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 27%;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.chartBgBridge {
+  position: absolute;
+  inset-block: 0;
+  left: 27%;
+  width: 11%;
+  background: rgba(245, 158, 11, 0.03);
+}
+
+.chartBgRetire {
+  position: absolute;
+  inset-block: 0;
+  left: 38%;
+  width: 62%;
+  background: rgba(110, 231, 183, 0.02);
+}
+
+// ─── Stat Grid ─────────────────────────────────────────────
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.statCard {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-left: 3px solid $border;
+  border-radius: 8px;
+  padding: 18px 20px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: all 0.2s;
+
+  &[data-active='true'] {
+    border-color: color-mix(in srgb, var(--scenario-color) 25%, transparent);
+    border-left-color: var(--scenario-color);
+    opacity: 1;
+  }
+}
+
+.statCardLabel {
+  font-size: 10px;
+  color: var(--scenario-color);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.statKey {
+  font-size: 11px;
+  color: $text-muted;
+}
+
+.statVal {
+  font-size: 13px;
+  color: $text;
+}
+
+.statValBold {
+  font-size: 12px;
+  color: $text;
+  font-weight: 700;
+}
+
+.progressTrack {
+  margin-top: 12px;
+  height: 3px;
+  background: $border;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--scenario-color);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  width: var(--fill-width, 0%);
+}
+
+// ─── Contributions ─────────────────────────────────────────
+.contribSection {
+  margin-bottom: 32px;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: $text-muted;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.contribBtnRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.contribBtn {
+  padding: 7px 16px;
+  border-radius: 4px;
+  border: 1px solid $border;
+  background: transparent;
+  color: $text-muted;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: $font-mono;
+  transition: all 0.15s;
+
+  &[data-active='true'] {
+    border-color: var(--scenario-color);
+    background: color-mix(in srgb, var(--scenario-color) 9%, transparent);
+    color: var(--scenario-color);
+  }
+}
+
+.contribTable {
+  border: 1px solid color-mix(in srgb, var(--scenario-color) 19%, transparent);
+  background: $bg-card;
+  border-radius: 10px;
+  overflow: auto;
+}
+
+.contribTableHeader {
+  display: grid;
+  grid-template-columns: var(--col-template, 160px 1fr);
+  border-bottom: 1px solid $border;
+  padding: 0 20px;
+  min-width: 500px;
+}
+
+.contribHeaderBucket {
+  padding: 14px 0;
+  font-size: 10px;
+  color: $text-dim;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.contribHeaderPhase {
+  padding: 12px 6px;
+  font-size: 10px;
+  color: var(--scenario-color);
+  letter-spacing: 1px;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.contribBody {
+  padding: 8px 0;
+  min-width: 500px;
+}
+
+.contribSubheader {
+  padding: 6px 20px;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: $text-dim;
+  text-transform: uppercase;
+}
+
+.contribRow {
+  display: grid;
+  grid-template-columns: var(--col-template, 160px 1fr);
+  padding: 5px 20px;
+}
+
+.contribBucketName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.bucketDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.bucketDotEmerald { background: $emerald; }
+.bucketDotPurple  { background: $purple; }
+.bucketDotBlue    { background: $blue; }
+.bucketDotGold    { background: $gold; }
+.bucketDotPink    { background: $pink; }
+.bucketDotOrange  { background: $orange; }
+
+.contribCell {
+  text-align: right;
+  font-size: 13px;
+  padding: 0 6px;
+}
+
+.contribCellZero    { color: #2a2d3a; }
+.contribCellEmerald { color: $emerald; font-weight: 600; }
+.contribCellPurple  { color: $purple;  font-weight: 600; }
+.contribCellBlue    { color: $blue;    font-weight: 600; }
+.contribCellGold    { color: $gold;    font-weight: 600; }
+.contribCellPink    { color: $pink;    font-weight: 600; }
+.contribCellOrange  { color: $orange;  font-weight: 600; }
+
+.contribTotalRow {
+  display: grid;
+  grid-template-columns: var(--col-template, 160px 1fr);
+  padding: 10px 20px;
+  border-top: 1px solid $border-dim;
+  margin-top: 4px;
+}
+
+.contribTotalLabel {
+  font-size: 11px;
+  color: $text;
+  font-weight: 700;
+}
+
+.contribTotalCell {
+  text-align: right;
+  font-size: 13px;
+  color: $text;
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.lifeCostsSection {
+  padding: 8px 0;
+  border-top: 1px solid $border-dim;
+  min-width: 500px;
+}
+
+.phaseBarWrapper {
+  padding: 12px 20px 8px;
+}
+
+.phaseBarItem {
+  margin-bottom: 10px;
+}
+
+.phaseBarLabel {
+  font-size: 10px;
+  color: $text-muted;
+  margin-bottom: 4px;
+}
+
+.phaseBarTrack {
+  display: flex;
+  height: 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: $border-dim;
+}
+
+.phaseBarInvested {
+  background: var(--scenario-color);
+  height: 100%;
+  width: var(--invested-pct, 0%);
+}
+
+.phaseBarCosts {
+  background: $red;
+  height: 100%;
+  width: var(--costs-pct, 0%);
+}
+
+.phaseBarMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  font-size: 10px;
+}
+
+.phaseBarMetaInvested { color: var(--scenario-color); }
+.phaseBarMetaCosts    { color: $red; }
+
+// ─── Delta Table ───────────────────────────────────────────
+.deltaTable {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.deltaTableHeader {
+  padding: 16px 24px;
+  border-bottom: 1px solid $border;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: $text-muted;
+  text-transform: uppercase;
+}
+
+.deltaTableBody {
+  padding: 20px 24px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tableHead {
+  color: $text-muted;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+
+  th {
+    font-weight: 400;
+    padding-bottom: 12px;
+    text-align: right;
+
+    &:first-child { text-align: left; }
+  }
+}
+
+.tableBody {
+  tr { border-top: 1px solid $border-dim; }
+
+  td {
+    padding: 12px 0;
+    text-align: right;
+
+    &:first-child { text-align: left; }
+  }
+}
+
+.tdScenarioCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tdDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--scenario-color);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.tdScenarioName  { color: #c4cfe0; }
+.tdMuted         { color: #94a3b8; }
+.tdScenarioVal   { color: var(--scenario-color); font-weight: 700; }
+.tdDeltaBaseline { color: $text-muted; }
+.tdDeltaNegative { color: $red; }
+.tdDeltaPositive { color: $green; }
+
+// ─── Insights ──────────────────────────────────────────────
+.insightsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.insightCard {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.insightIcon  { font-size: 18px; margin-bottom: 8px; }
+.insightTitle { font-size: 12px; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+.insightBody  { font-size: 12px; color: #64748b; line-height: 1.7; }
+
+.colorBlue  { color: $blue; }
+.colorAmber { color: $amber; }
+.colorRed   { color: $red; }
+.colorGreen { color: $green; }
+
+// ─── Footer ────────────────────────────────────────────────
+.footer {
+  font-size: 11px;
+  color: $border;
+  text-align: center;
+  letter-spacing: 1px;
+}
