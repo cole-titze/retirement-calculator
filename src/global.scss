@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Playfair+Display:wght@400;700;900&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Scenario theme tokens — referenced as var(--scenario-color) by descendants */
+[data-scenario='No House, No Kids'] { --scenario-color: #4ade80; }
+[data-scenario='House Only']        { --scenario-color: #60a5fa; }
+[data-scenario='House + 1 Kid']     { --scenario-color: #f59e0b; }
+[data-scenario='House + 2 Kids']    { --scenario-color: #f87171; }
