@@ -13,6 +13,11 @@ import styles from "./App.module.scss";
 
 type Theme = "paper" | "midnight" | "slate";
 
+function getQSP(name: string, fallback: number, min: number, max: number): number {
+  const v = Number(new URLSearchParams(window.location.search).get(name));
+  return Number.isFinite(v) && v >= min && v <= max ? v : fallback;
+}
+
 const THEMES: { id: Theme; label: string }[] = [
   { id: "paper",    label: "Paper"    },
   { id: "midnight", label: "Midnight" },
@@ -44,20 +49,34 @@ export default function FireScenarios() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  const [currentAge, setCurrentAge] = useState(30);
-  const [currentAgeRaw, setCurrentAgeRaw] = useState("30");
-  const [rent, setRent] = useState(1500);
-  const [mortgage, setMortgage] = useState(3000);
-  const [postCoastInvest, setPostCoastInvest] = useState(0);
-  const [postCoastRaw, setPostCoastRaw] = useState("0");
-  const [retireAge, setRetireAge] = useState(50);
-  const [retireAgeRaw, setRetireAgeRaw] = useState("50");
-  const [inflation, setInflation] = useState(4);
-  const [inflationRaw, setInflationRaw] = useState("4");
-  const [withdrawalRate, setWithdrawalRate] = useState(4);
-  const [withdrawalRaw, setWithdrawalRaw] = useState("4");
-  const [startingAssets, setStartingAssets] = useState(0);
-  const [startingAssetsRaw, setStartingAssetsRaw] = useState("0");
+  const [currentAge, setCurrentAge] = useState(() => getQSP('age', 30, 18, 55));
+  const [currentAgeRaw, setCurrentAgeRaw] = useState(() => String(getQSP('age', 30, 18, 55)));
+  const [rent, setRent] = useState(() => getQSP('rent', 1500, 0, 100000));
+  const [mortgage, setMortgage] = useState(() => getQSP('mortgage', 3000, 0, 100000));
+  const [postCoastInvest, setPostCoastInvest] = useState(() => getQSP('postCoast', 0, 0, 100000));
+  const [postCoastRaw, setPostCoastRaw] = useState(() => String(getQSP('postCoast', 0, 0, 100000)));
+  const [retireAge, setRetireAge] = useState(() => getQSP('retireAge', 50, 30, 58));
+  const [retireAgeRaw, setRetireAgeRaw] = useState(() => String(getQSP('retireAge', 50, 30, 58)));
+  const [inflation, setInflation] = useState(() => getQSP('inflation', 4, 0, 10));
+  const [inflationRaw, setInflationRaw] = useState(() => String(getQSP('inflation', 4, 0, 10)));
+  const [withdrawalRate, setWithdrawalRate] = useState(() => getQSP('withdrawal', 4, 1, 10));
+  const [withdrawalRaw, setWithdrawalRaw] = useState(() => String(getQSP('withdrawal', 4, 1, 10)));
+  const [startingAssets, setStartingAssets] = useState(() => getQSP('assets', 0, 0, 1e9));
+  const [startingAssetsRaw, setStartingAssetsRaw] = useState(() => String(getQSP('assets', 0, 0, 1e9)));
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (currentAge !== 30)        p.set('age',       String(currentAge));
+    if (startingAssets !== 0)     p.set('assets',    String(startingAssets));
+    if (rent !== 1500)            p.set('rent',      String(rent));
+    if (mortgage !== 3000)        p.set('mortgage',  String(mortgage));
+    if (postCoastInvest !== 0)    p.set('postCoast', String(postCoastInvest));
+    if (retireAge !== 50)         p.set('retireAge', String(retireAge));
+    if (inflation !== 4)          p.set('inflation', String(inflation));
+    if (withdrawalRate !== 4)     p.set('withdrawal',String(withdrawalRate));
+    const qs = p.toString();
+    window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
+  }, [currentAge, startingAssets, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate]);
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;

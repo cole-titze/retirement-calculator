@@ -231,6 +231,10 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
     border-color: var(--focus-border);
     box-shadow: 0 0 0 3px var(--focus-ring);
   }
+
+  @media (max-width: 760px) {
+    font-size: 16px;
+  }
 }
 
 // Neutralized
