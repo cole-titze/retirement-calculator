@@ -75,15 +75,6 @@ spec:
     matchLabels:
       app: retirement-calculator
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: retirement-calculator-secret
-  namespace: retirement-calculator
-type: Opaque
-stringData:
-  cloudflare-tunnel-token: ""
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
