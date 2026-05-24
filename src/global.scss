@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Playfair+Display:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
 *,
 *::before,
@@ -8,8 +8,68 @@
   padding: 0;
 }
 
-/* Scenario theme tokens — referenced as var(--scenario-color) by descendants */
-[data-scenario='No House, No Kids'] { --scenario-color: #4ade80; }
-[data-scenario='House Only']        { --scenario-color: #60a5fa; }
-[data-scenario='House + 1 Kid']     { --scenario-color: #f59e0b; }
-[data-scenario='House + 2 Kids']    { --scenario-color: #f87171; }
+// ─── Paper (warm light) ───────────────────────────────────────────
+:root {
+  --bg:           #f8f6f1;
+  --bg-card:      #ffffff;
+  --bg-input:     #f2f0eb;
+  --border:       #e0dcd4;
+  --border-dim:   #ece8e1;
+  --border-input: #cac6be;
+  --text:         #1c1917;
+  --text-body:    #44403c;
+  --text-muted:   #78716c;
+  --text-dim:     #b0aba4;
+  --focus-border: #8f7355;
+  --focus-ring:   rgba(143, 115, 85, 0.1);
+  --color-sage:   #2e7d52;
+  --color-ink:    #1d5f8a;
+  --color-honey:  #9a6820;
+  --color-wine:   #8f2f2f;
+}
+
+// ─── Midnight (warm dark) ─────────────────────────────────────────
+html[data-theme="midnight"] {
+  --bg:           #17151c;
+  --bg-card:      #1f1c27;
+  --bg-input:     #272433;
+  --border:       #302c3e;
+  --border-dim:   #282436;
+  --border-input: #3d3850;
+  --text:         #ece7e1;
+  --text-body:    #bab5ad;
+  --text-muted:   #7a7570;
+  --text-dim:     #48454a;
+  --focus-border: #b49a6e;
+  --focus-ring:   rgba(180, 154, 110, 0.12);
+  --color-sage:   #4dbf7c;
+  --color-ink:    #5ba3d8;
+  --color-honey:  #d49540;
+  --color-wine:   #cc5858;
+}
+
+// ─── Slate (cool dark) ────────────────────────────────────────────
+html[data-theme="slate"] {
+  --bg:           #1b2130;
+  --bg-card:      #222d40;
+  --bg-input:     #1e2a3a;
+  --border:       #2d3a52;
+  --border-dim:   #263344;
+  --border-input: #384e6e;
+  --text:         #dde4f0;
+  --text-body:    #9eadc6;
+  --text-muted:   #6a7890;
+  --text-dim:     #3e4f68;
+  --focus-border: #5e91d2;
+  --focus-ring:   rgba(94, 145, 210, 0.15);
+  --color-sage:   #3dbd7a;
+  --color-ink:    #68acf0;
+  --color-honey:  #e0b050;
+  --color-wine:   #e06565;
+}
+
+// ─── Scenario CSS vars — cascade from theme vars ──────────────────
+[data-scenario='No House, No Kids'] { --scenario-color: var(--color-sage); }
+[data-scenario='House Only']        { --scenario-color: var(--color-ink); }
+[data-scenario='House + 1 Kid']     { --scenario-color: var(--color-honey); }
+[data-scenario='House + 2 Kids']    { --scenario-color: var(--color-wine); }

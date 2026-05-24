@@ -1,113 +1,207 @@
-// ─── Design tokens ────────────────────────────────────────
-$bg-deep:    #07090f;
-$bg-card:    #0a0c12;
-$bg-input:   #0f1117;
-$border:     #1e2235;
-$border-dim: #111420;
-$text:       #e2e8f0;
-$text-muted: #475569;
-$text-dim:   #334155;
-$text-bright: #f1f5f9;
-$font-mono:  'Courier Prime', monospace;
-$font-serif: 'Playfair Display', serif;
+// ─── Non-color tokens (unchanged across themes) ───────────────────
+$font-display: 'Cormorant Garamond', Georgia, serif;
+$font-body:    'IBM Plex Sans', system-ui, sans-serif;
+$font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 
-$green:   #4ade80;
-$blue:    #60a5fa;
-$amber:   #f59e0b;
-$red:     #f87171;
-$pink:    #f472b6;
-$purple:  #a78bfa;
-$emerald: #6ee7b7;
-$orange:  #fb923c;
-$gold:    #d97706;
-
-// ─── Root ──────────────────────────────────────────────────
+// ─── Root ─────────────────────────────────────────────────────────
 .root {
   min-height: 100vh;
-  background: $bg-deep;
-  color: $text;
-  font-family: $font-mono;
-  padding: 36px 20px 60px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: $font-body;
+  padding: 52px 24px 80px;
+  transition: background 0.2s, color 0.2s;
 }
 
 .inner {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
 }
 
-// ─── Header ────────────────────────────────────────────────
+// ─── Header ───────────────────────────────────────────────────────
 .header {
-  margin-bottom: 48px;
-  border-bottom: 1px solid $border;
-  padding-bottom: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 32px;
+  margin-bottom: 52px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 40px;
+}
+
+.headerContent {
+  flex: 1;
+  min-width: 0;
 }
 
 .headerEyebrow {
-  font-size: 10px;
-  letter-spacing: 6px;
-  color: $text-muted;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .headerTitle {
-  font-family: $font-serif;
-  font-size: clamp(36px, 6vw, 64px);
-  font-weight: 900;
-  letter-spacing: -1px;
-  line-height: 1.05;
-  color: $text-bright;
+  font-family: $font-display;
+  font-size: clamp(52px, 9vw, 96px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  color: var(--text);
 }
 
 .headerSubtitle {
-  color: $text-dim;
+  color: var(--text-muted);
   font-weight: 400;
   font-style: italic;
 }
 
 .headerDesc {
-  margin-top: 16px;
-  font-size: 13px;
-  color: $text-muted;
-  max-width: 520px;
-  line-height: 1.7;
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 480px;
+  line-height: 1.8;
+  font-weight: 400;
 }
 
-// ─── Inputs Panel ──────────────────────────────────────────
-.inputsPanel {
+// ─── Theme Picker ─────────────────────────────────────────────────
+.themePicker {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 32px;
-  background: $bg-card;
-  border: 1px solid $border;
-  border-radius: 10px;
-  padding: 18px 24px;
+  flex-direction: column;
   align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.themePickerLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.themeButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.themeBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: $font-body;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--border-input);
+    color: var(--text-body);
+  }
+
+  &[data-active='true'] {
+    border-color: var(--text-dim);
+    background: var(--bg-card);
+    color: var(--text);
+  }
+}
+
+.themeBtnDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &[data-theme-id='paper']    { background: #f8f6f1; border: 1px solid #c4bdb3; }
+  &[data-theme-id='midnight'] { background: #17151c; border: 1px solid #302c3e; }
+  &[data-theme-id='slate']    { background: #1b2130; border: 1px solid #2d3a52; }
+}
+
+// ─── Inputs Panel ─────────────────────────────────────────────────
+.inputsPanel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 40px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.inputSection {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 24px 28px;
+  border-right: 1px solid var(--border);
+
+  &:last-child {
+    border-right: none;
+  }
+
+  @media (max-width: 760px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+
+    &:last-child { border-bottom: none; }
+    &:nth-child(odd) { border-right: 1px solid var(--border); }
+  }
+}
+
+.inputSectionLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-dim);
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 .inputLabel {
   font-size: 10px;
-  letter-spacing: 2px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-.labelGreen  { color: $green; }
-.labelAmber  { color: $amber; }
-.labelRed    { color: $red; }
-.labelBlue   { color: $blue; }
-.labelPink   { color: $pink; }
-.labelPurple { color: $purple; }
+// Kept for compatibility — all neutral now
+.labelGreen,
+.labelAmber,
+.labelRed,
+.labelBlue,
+.labelPink,
+.labelPurple {
+  color: var(--text-muted);
+}
 
 .inputHint {
-  font-size: 10px;
-  color: $text-dim;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: var(--text-dim);
 }
 
 .inputRow {
@@ -117,104 +211,118 @@ $gold:    #d97706;
 }
 
 .inputPrefix {
-  font-size: 13px;
-  color: $text-muted;
+  font-family: $font-mono;
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
 .input {
-  background: $bg-input;
-  border-radius: 4px;
-  color: $text;
+  background: var(--bg-input);
+  border-radius: 6px;
+  color: var(--text);
   font-family: $font-mono;
-  font-size: 13px;
-  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 7px 10px;
   outline: none;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-input);
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: var(--focus-border);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
 }
 
-.inputGreen  { border-color: rgba(74, 222, 128, 0.25); }
-.inputAmber  { border-color: rgba(245, 158, 11, 0.25); }
-.inputRed    { border-color: rgba(248, 113, 113, 0.25); }
-.inputBlue   { border-color: rgba(96, 165, 250, 0.25); }
-.inputPink   { border-color: rgba(244, 114, 182, 0.25); }
-.inputPurple { border-color: rgba(167, 139, 250, 0.25); }
+// Neutralized
+.inputGreen,
+.inputAmber,
+.inputRed,
+.inputBlue,
+.inputPink,
+.inputPurple {}
 
-.inputSm { width: 60px; }
-.inputMd { width: 70px; }
-.inputLg { width: 100px; }
-.inputXl { width: 110px; }
+.inputSm { width: 64px; }
+.inputMd { width: 76px; }
+.inputLg { width: 108px; }
+.inputXl { width: 124px; }
 
-.divider {
-  width: 1px;
-  background: $border;
-  align-self: stretch;
-}
+// Kept for compatibility — no longer rendered
+.divider {}
+.mortgagePremiumBlock {}
+.mortgagePremiumLabel {}
+.mortgagePremiumAmount {}
+.mortgagePremiumHint {}
 
-.mortgagePremiumBlock {
-  margin-left: auto;
+.derivedRow {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  justify-content: center;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-dim);
 }
 
-.mortgagePremiumLabel {
+.derivedLabel {
   font-size: 10px;
-  color: $text-muted;
-  letter-spacing: 1px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
-.mortgagePremiumAmount {
-  font-size: 20px;
+.derivedAmount {
   font-family: $font-mono;
-  font-weight: 700;
-  color: $text-dim;
-
-  &.positive { color: $pink; }
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-dim);
 }
 
-.mortgagePremiumHint {
-  font-size: 10px;
-  color: $text-dim;
+.derivedAmountPositive {
+  color: var(--color-wine);
 }
 
-// ─── Scenario Buttons ──────────────────────────────────────
+// ─── Scenario Buttons ─────────────────────────────────────────────
 .scenarioBtnRow {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  align-items: center;
 }
 
 .scenarioBtn {
-  padding: 8px 18px;
-  border-radius: 4px;
-  border: 1px solid $border;
-  background: transparent;
-  color: $text-muted;
-  font-size: 11px;
-  letter-spacing: 1px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: $font-body;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  font-family: $font-mono;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 7px;
+  transition: all 0.15s;
 
-  &:hover { transform: translateY(-1px); }
+  &:hover {
+    border-color: var(--border-input);
+    background: var(--bg);
+  }
 
   &[data-active='true'] {
     border-color: var(--scenario-color);
-    background: color-mix(in srgb, var(--scenario-color) 8%, transparent);
+    background: color-mix(in srgb, var(--scenario-color) 8%, var(--bg-card));
     color: var(--scenario-color);
   }
 }
 
 .scenarioBtnDot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: $border;
+  background: var(--border);
   display: inline-block;
   flex-shrink: 0;
 }
@@ -225,32 +333,38 @@ $gold:    #d97706;
 
 .toggleBtn {
   margin-left: auto;
-  padding: 8px 18px;
-  border-radius: 4px;
-  border: 1px solid $border;
-  background: transparent;
-  color: $text-muted;
-  font-size: 11px;
-  letter-spacing: 1px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: $font-body;
+  font-weight: 500;
   cursor: pointer;
-  font-family: $font-mono;
-  transition: all 0.2s ease;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: var(--border-input);
+    background: var(--bg);
+  }
 
   &[data-active='true'] {
-    border-color: $purple;
-    background: color-mix(in srgb, $purple 8%, transparent);
-    color: $purple;
+    border-color: var(--color-ink);
+    background: color-mix(in srgb, var(--color-ink) 8%, var(--bg-card));
+    color: var(--color-ink);
   }
 }
 
-// ─── Main Chart ────────────────────────────────────────────
+// ─── Main Chart ───────────────────────────────────────────────────
 .chartWrapper {
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 28px 12px 20px;
   margin-bottom: 32px;
   position: relative;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .chartBgOverlay {
@@ -266,7 +380,7 @@ $gold:    #d97706;
   inset-block: 0;
   left: 0;
   width: 27%;
-  background: rgba(255, 255, 255, 0.01);
+  background: transparent;
 }
 
 .chartBgBridge {
@@ -274,7 +388,9 @@ $gold:    #d97706;
   inset-block: 0;
   left: 27%;
   width: 11%;
-  background: rgba(245, 158, 11, 0.03);
+  background: color-mix(in srgb, var(--color-honey) 8%, transparent);
+  border-left: 1px dashed color-mix(in srgb, var(--color-honey) 28%, transparent);
+  border-right: 1px dashed color-mix(in srgb, var(--color-honey) 28%, transparent);
 }
 
 .chartBgRetire {
@@ -282,68 +398,85 @@ $gold:    #d97706;
   inset-block: 0;
   left: 38%;
   width: 62%;
-  background: rgba(110, 231, 183, 0.02);
+  background: color-mix(in srgb, var(--color-sage) 6%, transparent);
 }
 
-// ─── Stat Grid ─────────────────────────────────────────────
+// ─── Stat Grid ────────────────────────────────────────────────────
 .statGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 12px;
-  margin-bottom: 40px;
+  margin-bottom: 44px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
 }
 
 .statCard {
-  background: $bg-card;
-  border: 1px solid $border;
-  border-left: 3px solid $border;
-  border-radius: 8px;
-  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 10px;
+  padding: 26px 24px;
   cursor: pointer;
   opacity: 0.4;
   transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 
   &[data-active='true'] {
-    border-color: color-mix(in srgb, var(--scenario-color) 25%, transparent);
+    border-color: color-mix(in srgb, var(--scenario-color) 22%, var(--border));
     border-left-color: var(--scenario-color);
     opacity: 1;
   }
 }
 
 .statCardLabel {
-  font-size: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   color: var(--scenario-color);
-  letter-spacing: 2px;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .statRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
+  align-items: baseline;
+  margin-bottom: 10px;
+
+  &:first-of-type {
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border-dim);
+  }
 }
 
 .statKey {
-  font-size: 11px;
-  color: $text-muted;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .statVal {
+  font-family: $font-mono;
   font-size: 13px;
-  color: $text;
+  font-weight: 500;
+  color: var(--text-body);
 }
 
 .statValBold {
-  font-size: 12px;
-  color: $text;
+  font-family: $font-mono;
+  font-size: 16px;
   font-weight: 700;
+  color: var(--scenario-color);
 }
 
 .progressTrack {
-  margin-top: 12px;
-  height: 3px;
-  background: $border;
+  margin-top: 18px;
+  height: 2px;
+  background: var(--border);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -354,17 +487,19 @@ $gold:    #d97706;
   border-radius: 2px;
   transition: width 0.5s ease;
   width: var(--fill-width, 0%);
+  opacity: 0.45;
 }
 
-// ─── Contributions ─────────────────────────────────────────
+// ─── Contributions ────────────────────────────────────────────────
 .contribSection {
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .sectionLabel {
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: $text-muted;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
   text-transform: uppercase;
   margin-bottom: 16px;
 }
@@ -377,52 +512,56 @@ $gold:    #d97706;
 }
 
 .contribBtn {
-  padding: 7px 16px;
-  border-radius: 4px;
-  border: 1px solid $border;
-  background: transparent;
-  color: $text-muted;
-  font-size: 11px;
-  letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: $font-body;
+  font-weight: 500;
   cursor: pointer;
-  font-family: $font-mono;
   transition: all 0.15s;
 
   &[data-active='true'] {
     border-color: var(--scenario-color);
-    background: color-mix(in srgb, var(--scenario-color) 9%, transparent);
+    background: color-mix(in srgb, var(--scenario-color) 8%, var(--bg-card));
     color: var(--scenario-color);
   }
 }
 
 .contribTable {
-  border: 1px solid color-mix(in srgb, var(--scenario-color) 19%, transparent);
-  background: $bg-card;
+  border: 1px solid color-mix(in srgb, var(--scenario-color) 18%, var(--border));
+  background: var(--bg-card);
   border-radius: 10px;
   overflow: auto;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .contribTableHeader {
   display: grid;
   grid-template-columns: var(--col-template, 160px 1fr);
-  border-bottom: 1px solid $border;
+  border-bottom: 1px solid var(--border);
   padding: 0 20px;
   min-width: 500px;
+  background: var(--bg);
 }
 
 .contribHeaderBucket {
   padding: 14px 0;
   font-size: 10px;
-  color: $text-dim;
-  letter-spacing: 2px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .contribHeaderPhase {
   padding: 12px 6px;
   font-size: 10px;
+  font-weight: 600;
   color: var(--scenario-color);
-  letter-spacing: 1px;
+  letter-spacing: 0.05em;
   text-align: right;
   line-height: 1.5;
 }
@@ -435,8 +574,9 @@ $gold:    #d97706;
 .contribSubheader {
   padding: 6px 20px;
   font-size: 9px;
-  letter-spacing: 3px;
-  color: $text-dim;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
   text-transform: uppercase;
 }
 
@@ -450,8 +590,8 @@ $gold:    #d97706;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: 13px;
+  color: var(--text-body);
 }
 
 .bucketDot {
@@ -462,52 +602,55 @@ $gold:    #d97706;
   flex-shrink: 0;
 }
 
-.bucketDotEmerald { background: $emerald; }
-.bucketDotPurple  { background: $purple; }
-.bucketDotBlue    { background: $blue; }
-.bucketDotGold    { background: $gold; }
-.bucketDotPink    { background: $pink; }
-.bucketDotOrange  { background: $orange; }
+.bucketDotEmerald { background: var(--color-sage); }
+.bucketDotPurple  { background: #7c5abf; }
+.bucketDotBlue    { background: var(--color-ink); }
+.bucketDotGold    { background: var(--color-honey); }
+.bucketDotPink    { background: var(--color-wine); }
+.bucketDotOrange  { background: #c06430; }
 
 .contribCell {
   text-align: right;
+  font-family: $font-mono;
   font-size: 13px;
   padding: 0 6px;
 }
 
-.contribCellZero    { color: #2a2d3a; }
-.contribCellEmerald { color: $emerald; font-weight: 600; }
-.contribCellPurple  { color: $purple;  font-weight: 600; }
-.contribCellBlue    { color: $blue;    font-weight: 600; }
-.contribCellGold    { color: $gold;    font-weight: 600; }
-.contribCellPink    { color: $pink;    font-weight: 600; }
-.contribCellOrange  { color: $orange;  font-weight: 600; }
+.contribCellZero    { color: var(--border-dim); }
+.contribCellEmerald { color: var(--color-sage);  font-weight: 600; }
+.contribCellPurple  { color: #7c5abf;            font-weight: 600; }
+.contribCellBlue    { color: var(--color-ink);   font-weight: 600; }
+.contribCellGold    { color: var(--color-honey); font-weight: 600; }
+.contribCellPink    { color: var(--color-wine);  font-weight: 600; }
+.contribCellOrange  { color: #c06430;            font-weight: 600; }
 
 .contribTotalRow {
   display: grid;
   grid-template-columns: var(--col-template, 160px 1fr);
   padding: 10px 20px;
-  border-top: 1px solid $border-dim;
+  border-top: 1px solid var(--border-dim);
   margin-top: 4px;
+  background: var(--bg);
 }
 
 .contribTotalLabel {
-  font-size: 11px;
-  color: $text;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .contribTotalCell {
   text-align: right;
+  font-family: $font-mono;
   font-size: 13px;
-  color: $text;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--text);
   padding: 0 6px;
 }
 
 .lifeCostsSection {
   padding: 8px 0;
-  border-top: 1px solid $border-dim;
+  border-top: 1px solid var(--border-dim);
   min-width: 500px;
 }
 
@@ -516,61 +659,67 @@ $gold:    #d97706;
 }
 
 .phaseBarItem {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .phaseBarLabel {
-  font-size: 10px;
-  color: $text-muted;
-  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
 }
 
 .phaseBarTrack {
   display: flex;
-  height: 5px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   overflow: hidden;
-  background: $border-dim;
+  background: var(--border-dim);
 }
 
 .phaseBarInvested {
   background: var(--scenario-color);
   height: 100%;
   width: var(--invested-pct, 0%);
+  opacity: 0.65;
 }
 
 .phaseBarCosts {
-  background: $red;
+  background: var(--color-wine);
   height: 100%;
   width: var(--costs-pct, 0%);
+  opacity: 0.65;
 }
 
 .phaseBarMeta {
   display: flex;
   justify-content: space-between;
-  margin-top: 3px;
-  font-size: 10px;
+  margin-top: 4px;
+  font-family: $font-mono;
+  font-size: 11px;
 }
 
 .phaseBarMetaInvested { color: var(--scenario-color); }
-.phaseBarMetaCosts    { color: $red; }
+.phaseBarMetaCosts    { color: var(--color-wine); }
 
-// ─── Delta Table ───────────────────────────────────────────
+// ─── Delta Table ──────────────────────────────────────────────────
 .deltaTable {
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 32px;
+  overflow-x: auto;
+  margin-bottom: 36px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .deltaTableHeader {
   padding: 16px 24px;
-  border-bottom: 1px solid $border;
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: $text-muted;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
   text-transform: uppercase;
+  background: var(--bg);
 }
 
 .deltaTableBody {
@@ -584,13 +733,14 @@ $gold:    #d97706;
 }
 
 .tableHead {
-  color: $text-muted;
+  color: var(--text-muted);
   font-size: 10px;
-  letter-spacing: 2px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 
   th {
-    font-weight: 400;
+    font-weight: 600;
     padding-bottom: 12px;
     text-align: right;
 
@@ -599,13 +749,18 @@ $gold:    #d97706;
 }
 
 .tableBody {
-  tr { border-top: 1px solid $border-dim; }
+  tr { border-top: 1px solid var(--border-dim); }
 
   td {
     padding: 12px 0;
     text-align: right;
+    font-family: $font-mono;
+    font-size: 13px;
 
-    &:first-child { text-align: left; }
+    &:first-child {
+      text-align: left;
+      font-family: $font-body;
+    }
   }
 }
 
@@ -624,41 +779,86 @@ $gold:    #d97706;
   flex-shrink: 0;
 }
 
-.tdScenarioName  { color: #c4cfe0; }
-.tdMuted         { color: #94a3b8; }
-.tdScenarioVal   { color: var(--scenario-color); font-weight: 700; }
-.tdDeltaBaseline { color: $text-muted; }
-.tdDeltaNegative { color: $red; }
-.tdDeltaPositive { color: $green; }
+.tdScenarioName  { color: var(--text-body); font-size: 13px; }
+.tdMuted         { color: var(--text-muted); }
+.tdScenarioVal   { color: var(--scenario-color); font-weight: 600; }
+.tdDeltaBaseline { color: var(--text-muted); }
+.tdDeltaNegative { color: var(--color-wine); font-weight: 600; }
+.tdDeltaPositive { color: var(--color-sage); font-weight: 600; }
 
-// ─── Insights ──────────────────────────────────────────────
+// ─── Insights ─────────────────────────────────────────────────────
 .insightsGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin-bottom: 36px;
+  border-top: 1px solid var(--border);
+  padding-top: 32px;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 0;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .insightCard {
-  background: $bg-card;
-  border: 1px solid $border;
-  border-radius: 8px;
-  padding: 18px 20px;
+  padding: 0 32px 0 0;
+  border-right: 1px solid var(--border);
+
+  & + & {
+    padding-left: 32px;
+  }
+
+  &:last-child {
+    border-right: none;
+    padding-right: 0;
+  }
+
+  @media (max-width: 760px) {
+    padding-right: 24px;
+    border-right: none;
+
+    &:nth-child(odd) { border-right: 1px solid var(--border); }
+    & + & { padding-left: 24px; }
+  }
 }
 
-.insightIcon  { font-size: 18px; margin-bottom: 8px; }
-.insightTitle { font-size: 12px; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
-.insightBody  { font-size: 12px; color: #64748b; line-height: 1.7; }
+.insightAccent {
+  width: 24px;
+  height: 2px;
+  border-radius: 1px;
+  margin-bottom: 14px;
+  background: currentColor;
+}
 
-.colorBlue  { color: $blue; }
-.colorAmber { color: $amber; }
-.colorRed   { color: $red; }
-.colorGreen { color: $green; }
+.insightIcon  { display: none; }
 
-// ─── Footer ────────────────────────────────────────────────
+.insightTitle {
+  font-family: $font-display;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.insightBody { font-size: 13px; color: var(--text-muted); line-height: 1.85; }
+
+.colorBlue  { color: var(--color-ink); }
+.colorAmber { color: var(--color-honey); }
+.colorRed   { color: var(--color-wine); }
+.colorGreen { color: var(--color-sage); }
+
+// ─── Footer ───────────────────────────────────────────────────────
 .footer {
-  font-size: 11px;
-  color: $border;
+  font-size: 12px;
+  color: var(--text-dim);
   text-align: center;
-  letter-spacing: 1px;
+  letter-spacing: 0.04em;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
 }

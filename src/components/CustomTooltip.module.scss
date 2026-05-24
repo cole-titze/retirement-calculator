@@ -1,22 +1,24 @@
-$bg-card:   #0a0c12;
-$border:    #1e2235;
-$font-mono: 'Courier Prime', monospace;
+$font-body: 'IBM Plex Sans', system-ui, sans-serif;
+$font-mono: 'IBM Plex Mono', 'Courier New', monospace;
 
 .tooltip {
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;
-  font-family: $font-mono;
+  font-family: $font-body;
   font-size: 12px;
   min-width: 220px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .tooltipAge {
-  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
   margin-bottom: 10px;
-  letter-spacing: 2px;
-  font-size: 11px;
 }
 
 .tooltipRow {
@@ -28,10 +30,13 @@ $font-mono: 'Courier Prime', monospace;
 }
 
 .tooltipName {
-  color: #94a3b8;
-  font-size: 11px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .tooltipValue {
+  font-family: $font-mono;
   font-weight: 600;
+  font-size: 13px;
 }

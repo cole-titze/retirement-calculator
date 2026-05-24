@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -11,11 +11,38 @@ import { fmtM } from "./utils";
 import type { ScenarioResult } from "./types";
 import styles from "./App.module.scss";
 
+type Theme = "paper" | "midnight" | "slate";
+
+const THEMES: { id: Theme; label: string }[] = [
+  { id: "paper",    label: "Paper"    },
+  { id: "midnight", label: "Midnight" },
+  { id: "slate",    label: "Slate"    },
+];
+
+const THEME_SCENARIO_COLORS: Record<Theme, [string, string, string, string]> = {
+  paper:    ["#2e7d52", "#1d5f8a", "#9a6820", "#8f2f2f"],
+  midnight: ["#4dbf7c", "#5ba3d8", "#d49540", "#cc5858"],
+  slate:    ["#3dbd7a", "#68acf0", "#e0b050", "#e06565"],
+};
+
+const THEME_CHART: Record<Theme, { grid: string; axis: string; tick: string; retireRef: string; rothRef: string }> = {
+  paper:    { grid: "#eae7e1", axis: "#e0dcd4", tick: "#b0aba4", retireRef: "#9a6820", rothRef: "#2e7d52" },
+  midnight: { grid: "#302c3e", axis: "#2a2636", tick: "#7a7570", retireRef: "#d49540", rothRef: "#4dbf7c" },
+  slate:    { grid: "#2d3a52", axis: "#263344", tick: "#6a7890", retireRef: "#e0b050", rothRef: "#3dbd7a" },
+};
+
 export default function FireScenarios() {
   const [activeScenarios, setActiveScenarios] = useState(SCENARIO_DEFS.map(s => s.label));
   const [showNetWorth, setShowNetWorth] = useState(false);
   const [hoveredScenario, setHoveredScenario] = useState<string | null>(null);
   const [contribScenario, setContribScenario] = useState(SCENARIO_DEFS[0].label);
+  const [theme, setTheme] = useState<Theme>(() =>
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "midnight" : "paper"
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   const [currentAge, setCurrentAge] = useState(30);
   const [currentAgeRaw, setCurrentAgeRaw] = useState("30");
@@ -36,9 +63,11 @@ export default function FireScenarios() {
   const inflationRate = inflation / 100;
   const withdrawalRateDecimal = withdrawalRate / 100;
   const base = getBase(startingAssets);
+  const scenarioColors = THEME_SCENARIO_COLORS[theme];
+  const chart = THEME_CHART[theme];
 
-  const activeData: ScenarioResult[] = SCENARIO_DEFS.map(d =>
-    runScenario({ ...d, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, base })
+  const activeData: ScenarioResult[] = SCENARIO_DEFS.map((d, i) =>
+    runScenario({ ...d, color: scenarioColors[i], currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, base })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
@@ -67,183 +96,212 @@ export default function FireScenarios() {
 
         {/* Header */}
         <div className={styles.header}>
-          <div className={styles.headerEyebrow}>
-            Retirement Scenario Analysis · Age {currentAge} → 60
+          <div className={styles.headerContent}>
+            <div className={styles.headerEyebrow}>
+              Retirement Scenario Analysis · Age {currentAge} → 60
+            </div>
+            <h1 className={styles.headerTitle}>
+              Four Paths<br />
+              <span className={styles.headerSubtitle}>to the same freedom</span>
+            </h1>
+            <p className={styles.headerDesc}>
+              Comparing liquid net worth trajectories across life choices. Bridge phase: {retireAge}–59½ from taxable accounts. Full retirement: 59½+ from Roth.
+            </p>
           </div>
-          <h1 className={styles.headerTitle}>
-            Four Paths<br />
-            <span className={styles.headerSubtitle}>to the same freedom</span>
-          </h1>
-          <p className={styles.headerDesc}>
-            Comparing liquid net worth trajectories across life choices. Bridge phase: {retireAge}–59½ from taxable accounts. Full retirement: 59½+ from Roth.
-          </p>
+          <div className={styles.themePicker}>
+            <div className={styles.themePickerLabel}>Theme</div>
+            <div className={styles.themeButtons}>
+              {THEMES.map(t => (
+                <button
+                  key={t.id}
+                  className={styles.themeBtn}
+                  data-active={theme === t.id}
+                  onClick={() => setTheme(t.id)}
+                >
+                  <span className={styles.themeBtnDot} data-theme-id={t.id} />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Inputs Panel */}
         <div className={styles.inputsPanel}>
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelGreen}`}>Current Age</div>
-            <input
-              type="number"
-              value={currentAgeRaw}
-              min={18} max={55}
-              onChange={e => {
-                setCurrentAgeRaw(e.target.value);
-                const v = Number(e.target.value);
-                if (v >= 18 && v <= 55) setCurrentAge(v);
-              }}
-              onBlur={e => {
-                const v = Math.min(55, Math.max(18, Number(e.target.value) || 30));
-                setCurrentAge(v);
-                setCurrentAgeRaw(String(v));
-              }}
-              className={`${styles.input} ${styles.inputGreen} ${styles.inputMd}`}
-            />
-          </div>
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelGreen}`}>Starting Assets</div>
-            <div className={styles.inputRow}>
-              <span className={styles.inputPrefix}>$</span>
+
+          {/* You */}
+          <div className={styles.inputSection}>
+            <div className={styles.inputSectionLabel}>You</div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Current Age</div>
               <input
                 type="number"
-                value={startingAssetsRaw}
+                value={currentAgeRaw}
+                min={18} max={55}
                 onChange={e => {
-                  setStartingAssetsRaw(e.target.value);
+                  setCurrentAgeRaw(e.target.value);
                   const v = Number(e.target.value);
-                  if (v >= 0) setStartingAssets(v);
+                  if (v >= 18 && v <= 55) setCurrentAge(v);
                 }}
                 onBlur={e => {
-                  const v = Math.max(0, Number(e.target.value) || 0);
-                  setStartingAssets(v);
-                  setStartingAssetsRaw(String(v));
+                  const v = Math.min(55, Math.max(18, Number(e.target.value) || 30));
+                  setCurrentAge(v);
+                  setCurrentAgeRaw(String(v));
                 }}
-                className={`${styles.input} ${styles.inputGreen} ${styles.inputXl}`}
+                className={`${styles.input} ${styles.inputMd}`}
               />
             </div>
-          </div>
-          <div className={styles.divider} />
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelPurple}`}>Current Rent/mo</div>
-            <div className={styles.inputRow}>
-              <span className={styles.inputPrefix}>$</span>
-              <input
-                type="number"
-                defaultValue={rent}
-                onChange={e => { const v = Number(e.target.value); if (v >= 0) setRent(v); }}
-                onBlur={e => setRent(Math.max(0, Number(e.target.value) || 0))}
-                className={`${styles.input} ${styles.inputPurple} ${styles.inputLg}`}
-              />
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Starting Assets</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={startingAssetsRaw}
+                  onChange={e => {
+                    setStartingAssetsRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setStartingAssets(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setStartingAssets(v);
+                    setStartingAssetsRaw(String(v));
+                  }}
+                  className={`${styles.input} ${styles.inputXl}`}
+                />
+              </div>
             </div>
           </div>
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelPink}`}>Est. Mortgage/mo</div>
-            <div className={styles.inputRow}>
-              <span className={styles.inputPrefix}>$</span>
-              <input
-                type="number"
-                defaultValue={mortgage}
-                onChange={e => { const v = Number(e.target.value); if (v >= 0) setMortgage(v); }}
-                onBlur={e => setMortgage(Math.max(0, Number(e.target.value) || 0))}
-                className={`${styles.input} ${styles.inputPink} ${styles.inputLg}`}
-              />
+
+          {/* Housing */}
+          <div className={styles.inputSection}>
+            <div className={styles.inputSectionLabel}>Housing</div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Current Rent / mo</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  defaultValue={rent}
+                  onChange={e => { const v = Number(e.target.value); if (v >= 0) setRent(v); }}
+                  onBlur={e => setRent(Math.max(0, Number(e.target.value) || 0))}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+            </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Est. Mortgage / mo</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  defaultValue={mortgage}
+                  onChange={e => { const v = Number(e.target.value); if (v >= 0) setMortgage(v); }}
+                  onBlur={e => setMortgage(Math.max(0, Number(e.target.value) || 0))}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+            </div>
+            <div className={styles.derivedRow}>
+              <span className={styles.derivedLabel}>premium over rent</span>
+              <span className={`${styles.derivedAmount}${mortgagePremium > 0 ? ` ${styles.derivedAmountPositive}` : ""}`}>
+                +${mortgagePremium.toLocaleString()}/mo
+              </span>
             </div>
           </div>
-          <div className={styles.divider} />
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelAmber}`}>Retire Age</div>
-            <input
-              type="number"
-              value={retireAgeRaw}
-              min={30} max={58}
-              onChange={e => {
-                setRetireAgeRaw(e.target.value);
-                const v = Number(e.target.value);
-                if (v >= 30 && v <= 58) setRetireAge(v);
-              }}
-              onBlur={e => {
-                const v = Math.min(58, Math.max(30, Number(e.target.value) || 50));
-                setRetireAge(v);
-                setRetireAgeRaw(String(v));
-              }}
-              className={`${styles.input} ${styles.inputAmber} ${styles.inputMd}`}
-            />
-            <div className={styles.inputHint}>bridge ends 59½</div>
-          </div>
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelRed}`}>Inflation %</div>
-            <div className={styles.inputRow}>
+
+          {/* Goals */}
+          <div className={styles.inputSection}>
+            <div className={styles.inputSectionLabel}>Goals</div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Target Retire Age</div>
               <input
                 type="number"
-                value={inflationRaw}
+                value={retireAgeRaw}
+                min={30} max={58}
                 onChange={e => {
-                  setInflationRaw(e.target.value);
+                  setRetireAgeRaw(e.target.value);
                   const v = Number(e.target.value);
-                  if (v >= 0 && v <= 10) setInflation(v);
+                  if (v >= 30 && v <= 58) setRetireAge(v);
                 }}
                 onBlur={e => {
-                  const v = Math.min(10, Math.max(0, Number(e.target.value) || 0));
-                  setInflation(v);
-                  setInflationRaw(String(v));
+                  const v = Math.min(58, Math.max(30, Number(e.target.value) || 50));
+                  setRetireAge(v);
+                  setRetireAgeRaw(String(v));
                 }}
-                className={`${styles.input} ${styles.inputRed} ${styles.inputSm}`}
+                className={`${styles.input} ${styles.inputMd}`}
               />
-              <span className={styles.inputPrefix}>%</span>
+              <div className={styles.inputHint}>bridge to Roth ends at 59½</div>
             </div>
-            <div className={styles.inputHint}>
-              real return: {Math.max(0, 7 - inflation).toFixed(0)}%
-            </div>
-          </div>
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelBlue}`}>Withdrawal %</div>
-            <div className={styles.inputRow}>
-              <input
-                type="number"
-                value={withdrawalRaw}
-                onChange={e => {
-                  setWithdrawalRaw(e.target.value);
-                  const v = Number(e.target.value);
-                  if (v >= 1 && v <= 10) setWithdrawalRate(v);
-                }}
-                onBlur={e => {
-                  const v = Math.min(10, Math.max(1, Number(e.target.value) || 4));
-                  setWithdrawalRate(v);
-                  setWithdrawalRaw(String(v));
-                }}
-                className={`${styles.input} ${styles.inputBlue} ${styles.inputSm}`}
-              />
-              <span className={styles.inputPrefix}>%</span>
-            </div>
-            <div className={styles.inputHint}>
-              FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Invest after Coast / mo</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={postCoastRaw}
+                  onChange={e => {
+                    setPostCoastRaw(e.target.value);
+                    setPostCoastInvest(Number(e.target.value) || 0);
+                  }}
+                  placeholder="0"
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>0 = full coast</div>
             </div>
           </div>
-          <div className={styles.divider} />
-          <div className={styles.inputGroup}>
-            <div className={`${styles.inputLabel} ${styles.labelGreen}`}>
-              Invest After Coast FIRE/mo
+
+          {/* Assumptions */}
+          <div className={styles.inputSection}>
+            <div className={styles.inputSectionLabel}>Assumptions</div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Inflation Rate</div>
+              <div className={styles.inputRow}>
+                <input
+                  type="number"
+                  value={inflationRaw}
+                  onChange={e => {
+                    setInflationRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0 && v <= 10) setInflation(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.min(10, Math.max(0, Number(e.target.value) || 0));
+                    setInflation(v);
+                    setInflationRaw(String(v));
+                  }}
+                  className={`${styles.input} ${styles.inputSm}`}
+                />
+                <span className={styles.inputPrefix}>%</span>
+              </div>
+              <div className={styles.inputHint}>real return: {Math.max(0, 7 - inflation).toFixed(0)}%</div>
             </div>
-            <div className={styles.inputRow}>
-              <span className={styles.inputPrefix}>$</span>
-              <input
-                type="number"
-                value={postCoastRaw}
-                onChange={e => {
-                  setPostCoastRaw(e.target.value);
-                  setPostCoastInvest(Number(e.target.value) || 0);
-                }}
-                placeholder="0"
-                className={`${styles.input} ${styles.inputGreen} ${styles.inputLg}`}
-              />
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Withdrawal Rate</div>
+              <div className={styles.inputRow}>
+                <input
+                  type="number"
+                  value={withdrawalRaw}
+                  onChange={e => {
+                    setWithdrawalRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 1 && v <= 10) setWithdrawalRate(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.min(10, Math.max(1, Number(e.target.value) || 4));
+                    setWithdrawalRate(v);
+                    setWithdrawalRaw(String(v));
+                  }}
+                  className={`${styles.input} ${styles.inputSm}`}
+                />
+                <span className={styles.inputPrefix}>%</span>
+              </div>
+              <div className={styles.inputHint}>FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)</div>
             </div>
-            <div className={styles.inputHint}>0 = full coast · any amount = partial</div>
           </div>
-          <div className={styles.mortgagePremiumBlock}>
-            <div className={styles.mortgagePremiumLabel}>MORTGAGE PREMIUM</div>
-            <div className={`${styles.mortgagePremiumAmount}${mortgagePremium > 0 ? ` ${styles.positive}` : ""}`}>
-              ${mortgagePremium.toLocaleString()}/mo
-            </div>
-            <div className={styles.mortgagePremiumHint}>vs rent</div>
-          </div>
+
         </div>
 
         {/* Scenario Toggle Buttons */}
@@ -283,24 +341,24 @@ export default function FireScenarios() {
           </div>
           <ResponsiveContainer width="100%" height={420}>
             <LineChart data={mergedData} margin={{ top: 10, right: 24, left: 8, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="2 4" stroke="#111420" />
+              <CartesianGrid strokeDasharray="1 3" stroke={chart.grid} />
               <XAxis
                 dataKey="age"
-                stroke="#1e2235"
-                tick={{ fill: "#475569", fontSize: 11, fontFamily: "'Courier Prime', monospace" }}
+                stroke={chart.axis}
+                tick={{ fill: chart.tick, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}
                 tickLine={false}
-                label={{ value: "Age", position: "insideBottomRight", offset: -8, fill: "#475569", fontSize: 11 }}
+                label={{ value: "Age", position: "insideBottomRight", offset: -8, fill: chart.tick, fontSize: 11 }}
               />
               <YAxis
-                stroke="#1e2235"
-                tick={{ fill: "#475569", fontSize: 11, fontFamily: "'Courier Prime', monospace" }}
+                stroke={chart.axis}
+                tick={{ fill: chart.tick, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}
                 tickLine={false}
                 tickFormatter={fmtM}
                 width={70}
               />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine x={retireAge} stroke="#F59E0B" strokeDasharray="3 5" strokeWidth={1} label={{ value: `Retire ${retireAge} →`, fill: "#F59E0B", fontSize: 9, position: "insideTopLeft" }} />
-              <ReferenceLine x={60} stroke="#4ade80" strokeDasharray="3 5" strokeWidth={1} label={{ value: "Roth 59½ →", fill: "#4ade80", fontSize: 9, position: "insideTopLeft" }} />
+              <ReferenceLine x={retireAge} stroke={chart.retireRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: `Retire ${retireAge} →`, fill: chart.retireRef, fontSize: 9, position: "insideTopLeft" }} />
+              <ReferenceLine x={60} stroke={chart.rothRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: "Roth 59½ →", fill: chart.rothRef, fontSize: 9, position: "insideTopLeft" }} />
               {activeData.map(s => {
                 if (!activeScenarios.includes(s.label)) return null;
                 const yearsToRetire = Math.max(0, retireAge - currentAge);
@@ -345,7 +403,7 @@ export default function FireScenarios() {
                         <g key={`coast-${s.label}`}>
                           <circle cx={cx} cy={cy} r={7} fill={s.color} fillOpacity={0.2} stroke={s.color} strokeWidth={2} />
                           <circle cx={cx} cy={cy} r={3} fill={s.color} />
-                          <text x={cx} y={cy - 14} textAnchor="middle" fill={s.color} fontSize={9} fontFamily="'Courier Prime', monospace" letterSpacing={1}>
+                          <text x={cx} y={cy - 14} textAnchor="middle" fill={s.color} fontSize={9} fontFamily="'IBM Plex Mono', monospace" letterSpacing={1}>
                             {s.coastLabel ?? `COAST ${coastAge}`}
                           </text>
                         </g>
@@ -571,32 +629,28 @@ export default function FireScenarios() {
         <div className={styles.insightsGrid}>
           {[
             {
-              icon: "◈",
               title: "The House Is Cheap",
               body: "A house costs surprisingly little long-term — home equity partially offsets the drag, and the mortgage replaces rent. The real cost is the 2-year saving period slowing compounding.",
               colorClass: styles.colorBlue,
             },
             {
-              icon: "◉",
               title: "Kids Are The Variable",
               body: "Childcare at ~$1,800–$3,600/mo per kid for 5+ years is the biggest disruption. The second kid compounds the impact during the same stretch, nearly doubling the drag.",
               colorClass: styles.colorAmber,
             },
             {
-              icon: "◎",
               title: "Bridge Fund Survives",
               body: "Even in the House + 2 Kids scenario, the taxable brokerage at 50 should cover the 9.5-year bridge to Roth access at 59½ — though with less margin for error.",
               colorClass: styles.colorRed,
             },
             {
-              icon: "◇",
               title: "Roth Is The Constant",
               body: "Your Roth contributions continue throughout. It compounds untouched until 59½ — the foundation of Phase 2 regardless of which path you take.",
               colorClass: styles.colorGreen,
             },
           ].map(card => (
             <div key={card.title} className={styles.insightCard}>
-              <div className={`${styles.insightIcon} ${card.colorClass}`}>{card.icon}</div>
+              <div className={`${styles.insightAccent} ${card.colorClass}`} />
               <div className={`${styles.insightTitle} ${card.colorClass}`}>{card.title}</div>
               <div className={styles.insightBody}>{card.body}</div>
             </div>
