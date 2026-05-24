@@ -49,6 +49,14 @@ export default function FireScenarios() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  const [vw, setVw] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const fn = () => setVw(window.innerWidth);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  const isMobile = vw < 600;
+
   const [currentAge, setCurrentAge] = useState(() => getQSP('age', 30, 18, 55));
   const [currentAgeRaw, setCurrentAgeRaw] = useState(() => String(getQSP('age', 30, 18, 55)));
   const [rent, setRent] = useState(() => getQSP('rent', 1500, 0, 100000));
@@ -359,21 +367,21 @@ export default function FireScenarios() {
             <div className={styles.chartBgRetire} />
           </div>
           <ResponsiveContainer width="100%" height={420}>
-            <LineChart data={mergedData} margin={{ top: 10, right: 24, left: 8, bottom: 10 }}>
+            <LineChart data={mergedData} margin={{ top: 10, right: isMobile ? 8 : 24, left: isMobile ? 0 : 8, bottom: 10 }}>
               <CartesianGrid strokeDasharray="1 3" stroke={chart.grid} />
               <XAxis
                 dataKey="age"
                 stroke={chart.axis}
-                tick={{ fill: chart.tick, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}
+                tick={{ fill: chart.tick, fontSize: isMobile ? 10 : 11, fontFamily: "'IBM Plex Mono', monospace" }}
                 tickLine={false}
                 label={{ value: "Age", position: "insideBottomRight", offset: -8, fill: chart.tick, fontSize: 11 }}
               />
               <YAxis
                 stroke={chart.axis}
-                tick={{ fill: chart.tick, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}
+                tick={{ fill: chart.tick, fontSize: isMobile ? 9 : 11, fontFamily: "'IBM Plex Mono', monospace" }}
                 tickLine={false}
                 tickFormatter={fmtM}
-                width={70}
+                width={isMobile ? 46 : 70}
               />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine x={retireAge} stroke={chart.retireRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: `Retire ${retireAge} →`, fill: chart.retireRef, fontSize: 9, position: "insideTopLeft" }} />
