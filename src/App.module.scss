@@ -821,8 +821,8 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
     padding-right: 24px;
     border-right: none;
 
-    &:nth-child(odd) { border-right: 1px solid var(--border); }
     & + & { padding-left: 24px; }
+    &:nth-child(odd) { border-right: 1px solid var(--border); padding-left: 0; }
   }
 }
 
