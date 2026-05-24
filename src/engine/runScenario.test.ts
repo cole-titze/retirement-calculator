@@ -118,3 +118,107 @@ describe("runScenario — bucket differences", () => {
     expect(retire0.total).toBeGreaterThanOrEqual(retire2.total);
   });
 });
+
+describe("runScenario — multi-bucket return rates", () => {
+  it("higher return bucket accumulates more than lower return bucket", () => {
+    const lowReturn = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 2 }],
+    });
+    const highReturn = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 10 }],
+    });
+    const retireLow  = lowReturn.data.find(d => d.age === baseParams.retireAge)!;
+    const retireHigh = highReturn.data.find(d => d.age === baseParams.retireAge)!;
+    expect(retireHigh.total).toBeGreaterThan(retireLow.total);
+  });
+
+  it("two buckets total equals equivalent single bucket at same avg rate", () => {
+    // Single bucket at 7%
+    const single = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: [{ id: "a", label: "A", balance: 0, monthlyContrib: 1000, annualReturn: 7 }],
+    });
+    // Two buckets at 7% each — should produce the same total
+    const dual = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: [
+        { id: "a", label: "A", balance: 0, monthlyContrib: 600, annualReturn: 7 },
+        { id: "b", label: "B", balance: 0, monthlyContrib: 400, annualReturn: 7 },
+      ],
+    });
+    const singleRetire = single.data.find(d => d.age === baseParams.retireAge)!;
+    const dualRetire   = dual.data.find(d => d.age === baseParams.retireAge)!;
+    expect(dualRetire.total).toBe(singleRetire.total);
+  });
+});
+
+describe("runScenario — college costs", () => {
+  it("college deduction reduces total at kid's 18th birthday", () => {
+    const withKid    = runScenario({ ...SCENARIO_DEFS[2], ...baseParams }); // House + 1 Kid
+    const withoutKid = runScenario({ ...SCENARIO_DEFS[1], ...baseParams }); // House Only
+    // House+1Kid scenario has a college deduction; House Only does not
+    // At any age after kid turns 18, the difference should reflect the deduction
+    const kid1BirthAge = 30; // hasHouse=true → kid1BirthAge=30
+    const collegeAge = kid1BirthAge + 18;
+    const after  = withKid.data.find(d => d.age === collegeAge + 1);
+    const before = withKid.data.find(d => d.age === collegeAge - 1);
+    if (after && before) {
+      // With college cost, total should be less than it would be without
+      const noKidAfter  = withoutKid.data.find(d => d.age === collegeAge + 1)!;
+      const noKidBefore = withoutKid.data.find(d => d.age === collegeAge - 1)!;
+      const kidGrowth   = after.total  - before.total;
+      const noKidGrowth = noKidAfter.total - noKidBefore.total;
+      // Kid scenario grows less over that year due to college cost
+      expect(kidGrowth).toBeLessThan(noKidGrowth);
+    }
+  });
+});
+
+describe("runScenario — bridge and retirement spending", () => {
+  it("portfolio decreases during bridge phase", () => {
+    const result = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: [{ id: "a", label: "A", balance: 500000, monthlyContrib: 0, annualReturn: 0 }],
+      inflationRate: 0,
+    });
+    const atRetire = result.data.find(d => d.age === baseParams.retireAge)!;
+    const atBridge = result.data.find(d => d.age === baseParams.retireAge + 2)!;
+    expect(atBridge.total).toBeLessThan(atRetire.total);
+  });
+
+  it("portfolio stays non-negative throughout when started with modest assets", () => {
+    const result = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: [{ id: "a", label: "A", balance: 100000, monthlyContrib: 0, annualReturn: 7 }],
+    });
+    result.data.forEach(d => expect(d.total).toBeGreaterThanOrEqual(0));
+  });
+
+  it("coast is not found when assets are insufficient", () => {
+    const result = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: [{ id: "a", label: "A", balance: 0, monthlyContrib: 0, annualReturn: 0 }],
+    });
+    expect(result.coastFireAge).toBeNull();
+  });
+});
+
+describe("runScenario — postCoastInvest", () => {
+  it("postCoastInvest > 0 produces higher total at retirement than full coast", () => {
+    const fullCoast = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: LARGE_BUCKETS,
+      postCoastInvest: 0,
+    });
+    const partialCoast = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: LARGE_BUCKETS,
+      postCoastInvest: 500,
+    });
+    const retire0 = fullCoast.data.find(d => d.age === baseParams.retireAge)!;
+    const retire500 = partialCoast.data.find(d => d.age === baseParams.retireAge)!;
+    expect(retire500.total).toBeGreaterThanOrEqual(retire0.total);
+  });
+});
