@@ -88,19 +88,10 @@ describe("runScenario — coast FIRE", () => {
 });
 
 describe("runScenario — house scenarios", () => {
-  it("netWorth is higher than total for house scenario (home equity adds value)", () => {
+  it("house scenario accumulates positive portfolio", () => {
     const result = runScenario({ ...SCENARIO_DEFS[1], ...baseParams }); // House Only
-    const postHousePurchase = result.data.filter(d => d.age > 28);
-    postHousePurchase.forEach(d => {
-      expect(d.netWorth).toBeGreaterThanOrEqual(d.total);
-    });
-  });
-
-  it("netWorth equals total for no-house scenario", () => {
-    const result = runScenario({ ...SCENARIO_DEFS[0], ...baseParams }); // No House, No Kids
-    result.data.forEach(d => {
-      expect(d.netWorth).toBe(d.total);
-    });
+    const atRetire = result.data.find(d => d.age === baseParams.retireAge)!;
+    expect(atRetire.total).toBeGreaterThan(0);
   });
 });
 

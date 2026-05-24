@@ -1,10 +1,6 @@
 import {
   GROWTH,
   METALS_GROWTH,
-  HOME_PRICE,
-  DOWN_PAYMENT,
-  CLOSING,
-  HOME_APPRECIATION,
   COLLEGE_PER_KID,
   BASE_DEFAULT,
 } from "../constants";
@@ -25,6 +21,7 @@ export function runScenario({
   postCoastInvest = 0,
   rentAmount = 1500,
   retireAge = 50,
+  growthRate = GROWTH,
   inflationRate = 0,
   withdrawalRate = 0.04,
   base = BASE_DEFAULT,
@@ -32,7 +29,7 @@ export function runScenario({
   const houseBuyAge = 28;
   const kid1BirthAge = hasHouse ? 30 : 29;
   const kid2BirthAge = kid1BirthAge + 2;
-  const growth = Math.max(0, GROWTH - inflationRate);
+  const growth = Math.max(0, growthRate - inflationRate);
 
   const config = {
     hasHouse,
@@ -53,7 +50,6 @@ export function runScenario({
     const MONTHLY_GROWTH_METALS = Math.pow(1 + METALS_GROWTH, 1 / 12);
     let r = base.yourRoth, w = base.wifeTraditional, t = base.taxable;
     let c = base.company, m = base.metals, s = base.sgov;
-    let hv = 0;
 
     const fireNum = retireSpend / withdrawalRate;
 
@@ -64,18 +60,6 @@ export function runScenario({
         r *= MONTHLY_GROWTH; w *= MONTHLY_GROWTH; t *= MONTHLY_GROWTH;
         c *= age < 35 ? 1.0 : Math.pow(1.04, 1 / 12);
         m *= MONTHLY_GROWTH_METALS;
-        if (hv > 0) hv *= Math.pow(1 + HOME_APPRECIATION, 1 / 12);
-
-        if (hasHouse && age === houseBuyAge && mo === 0) {
-          const tn = DOWN_PAYMENT + CLOSING;
-          if (s >= tn) {
-            s -= tn;
-          } else {
-            t -= tn - s;
-            s = 0;
-          }
-          hv = HOME_PRICE;
-        }
 
         if (mo === 0) {
           if (numKids >= 1 && age - kid1BirthAge === 18) t -= COLLEGE_PER_KID;
@@ -108,7 +92,6 @@ export function runScenario({
   let yourRoth = base.yourRoth, wifeTrad = base.wifeTraditional;
   let taxable = base.taxable, company = base.company;
   let metals = base.metals, sgov = base.sgov;
-  let homeEquity = 0, homeValue = 0;
 
   const data = [];
 
@@ -121,21 +104,8 @@ export function runScenario({
     yourRoth *= (1 + growth); wifeTrad *= (1 + growth);
     taxable  *= (1 + growth); company  *= age < 35 ? 1.0 : 1.04;
     metals   *= (1 + METALS_GROWTH);
-    if (homeValue > 0) homeValue *= (1 + HOME_APPRECIATION);
 
     if (isAccumulating) {
-      if (hasHouse && age === houseBuyAge) {
-        const totalNeeded = DOWN_PAYMENT + CLOSING;
-        if (sgov >= totalNeeded) {
-          sgov -= totalNeeded;
-        } else {
-          taxable -= totalNeeded - sgov;
-          sgov = 0;
-        }
-        homeValue = HOME_PRICE;
-        homeEquity = DOWN_PAYMENT;
-      }
-
       if (!isCoasting || postCoastInvest > 0) {
         const contrib = getMonthlyInvestable(age, isCoasting, config);
         yourRoth += contrib.roth   * 12;
@@ -146,10 +116,6 @@ export function runScenario({
 
       if (numKids >= 1 && age - kid1BirthAge === 18) taxable -= COLLEGE_PER_KID;
       if (numKids >= 2 && age - kid2BirthAge === 18) taxable -= COLLEGE_PER_KID;
-
-      if (hasHouse && age >= houseBuyAge) {
-        homeEquity = Math.min(homeEquity + 500 * 12, homeValue);
-      }
     }
 
     if (isBridge) {
@@ -172,7 +138,6 @@ export function runScenario({
     data.push({
       age,
       total: Math.round(liquidTotal / 1000),
-      netWorth: Math.round((liquidTotal + (hasHouse ? homeEquity : 0)) / 1000),
       coasting: isCoasting,
       isCoastPoint: age === coastFireAge,
       phase: (isAccumulating ? 0 : isBridge ? 1 : 2) as 0 | 1 | 2,

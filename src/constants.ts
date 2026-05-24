@@ -25,11 +25,6 @@ export const MONTHLY_BASE = {
   metals: 0,
 };
 
-export const HOME_PRICE = 450000;
-export const DOWN_PAYMENT = 45000;
-export const CLOSING = 9000;
-export const MORTGAGE_MONTHLY = 3000;
-export const HOME_APPRECIATION = 0.03;
 export const PROP_TAX_INS = 600;
 
 export const CHILDCARE_PER_KID = 1800;

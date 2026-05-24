@@ -28,7 +28,6 @@ export interface InvestableConfig {
 export interface DataPoint {
   age: number;
   total: number;
-  netWorth: number;
   coasting: boolean;
   isCoastPoint: boolean;
   phase: 0 | 1 | 2;
@@ -66,6 +65,7 @@ export interface ScenarioParams extends ScenarioDef {
   postCoastInvest?: number;
   rentAmount?: number;
   retireAge?: number;
+  growthRate?: number;
   inflationRate?: number;
   withdrawalRate?: number;
   base: Portfolio;

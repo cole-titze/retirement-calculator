@@ -38,15 +38,17 @@ const THEME_CHART: Record<Theme, { grid: string; axis: string; tick: string; ret
 
 export default function FireScenarios() {
   const [activeScenarios, setActiveScenarios] = useState(SCENARIO_DEFS.map(s => s.label));
-  const [showNetWorth, setShowNetWorth] = useState(false);
   const [hoveredScenario, setHoveredScenario] = useState<string | null>(null);
   const [contribScenario, setContribScenario] = useState(SCENARIO_DEFS[0].label);
   const [theme, setTheme] = useState<Theme>(() =>
     window.matchMedia("(prefers-color-scheme: dark)").matches ? "slate" : "paper"
   );
 
+  const THEME_BG: Record<Theme, string> = { paper: "#f8f6f1", midnight: "#17151c", slate: "#1b2130" };
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", THEME_BG[theme]);
   }, [theme]);
 
   const [vw, setVw] = useState(() => window.innerWidth);
@@ -69,6 +71,8 @@ export default function FireScenarios() {
   const [inflationRaw, setInflationRaw] = useState(() => String(getQSP('inflation', 4, 0, 10)));
   const [withdrawalRate, setWithdrawalRate] = useState(() => getQSP('withdrawal', 4, 1, 10));
   const [withdrawalRaw, setWithdrawalRaw] = useState(() => String(getQSP('withdrawal', 4, 1, 10)));
+  const [growthRate, setGrowthRate] = useState(() => getQSP('growth', 7, 1, 20));
+  const [growthRaw, setGrowthRaw] = useState(() => String(getQSP('growth', 7, 1, 20)));
   const [startingAssets, setStartingAssets] = useState(() => getQSP('assets', 0, 0, 1e9));
   const [startingAssetsRaw, setStartingAssetsRaw] = useState(() => String(getQSP('assets', 0, 0, 1e9)));
 
@@ -82,27 +86,26 @@ export default function FireScenarios() {
     if (retireAge !== 50)         p.set('retireAge', String(retireAge));
     if (inflation !== 4)          p.set('inflation', String(inflation));
     if (withdrawalRate !== 4)     p.set('withdrawal',String(withdrawalRate));
+    if (growthRate !== 7)         p.set('growth',    String(growthRate));
     const qs = p.toString();
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
-  }, [currentAge, startingAssets, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate]);
+  }, [currentAge, startingAssets, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate, growthRate]);
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;
   const withdrawalRateDecimal = withdrawalRate / 100;
+  const growthRateDecimal = growthRate / 100;
   const base = getBase(startingAssets);
   const scenarioColors = THEME_SCENARIO_COLORS[theme];
   const chart = THEME_CHART[theme];
 
   const activeData: ScenarioResult[] = SCENARIO_DEFS.map((d, i) =>
-    runScenario({ ...d, color: scenarioColors[i], currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, base })
+    runScenario({ ...d, color: scenarioColors[i], currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, growthRate: growthRateDecimal, inflationRate, withdrawalRate: withdrawalRateDecimal, base })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
     const row: Record<string, number> = { age: activeData[0].data[i].age };
-    activeData.forEach(s => {
-      row[s.label] = s.data[i].total;
-      row[`${s.label}_nw`] = s.data[i].netWorth;
-    });
+    activeData.forEach(s => { row[s.label] = s.data[i].total; });
     return row;
   });
 
@@ -297,7 +300,7 @@ export default function FireScenarios() {
                 />
                 <span className={styles.inputPrefix}>%</span>
               </div>
-              <div className={styles.inputHint}>real return: {Math.max(0, 7 - inflation).toFixed(0)}%</div>
+              <div className={styles.inputHint}>real return: {Math.max(0, growthRate - inflation).toFixed(0)}%</div>
             </div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Withdrawal Rate</div>
@@ -320,6 +323,28 @@ export default function FireScenarios() {
                 <span className={styles.inputPrefix}>%</span>
               </div>
               <div className={styles.inputHint}>FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)</div>
+            </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Investment Return</div>
+              <div className={styles.inputRow}>
+                <input
+                  type="number"
+                  value={growthRaw}
+                  onChange={e => {
+                    setGrowthRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 1 && v <= 20) setGrowthRate(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.min(20, Math.max(1, Number(e.target.value) || 7));
+                    setGrowthRate(v);
+                    setGrowthRaw(String(v));
+                  }}
+                  className={`${styles.input} ${styles.inputSm}`}
+                />
+                <span className={styles.inputPrefix}>%</span>
+              </div>
+              <div className={styles.inputHint}>nominal annual</div>
             </div>
           </div>
 
@@ -344,13 +369,6 @@ export default function FireScenarios() {
               </button>
             );
           })}
-          <button
-            data-active={showNetWorth}
-            className={styles.toggleBtn}
-            onClick={() => setShowNetWorth(!showNetWorth)}
-          >
-            {showNetWorth ? "▪ Incl. Home Equity" : "▫ Liquid Only"}
-          </button>
         </div>
 
         {/* Main Chart */}
@@ -405,14 +423,13 @@ export default function FireScenarios() {
               })}
               {activeData.map(s => {
                 if (!activeScenarios.includes(s.label)) return null;
-                const key = showNetWorth ? `${s.label}_nw` : s.label;
                 const coastAge = s.coastFireAge;
                 return (
                   <Line
-                    key={key}
+                    key={s.label}
                     type="monotone"
-                    dataKey={key}
-                    name={s.label + (showNetWorth ? " (NW)" : "")}
+                    dataKey={s.label}
+                    name={s.label}
                     stroke={s.color}
                     strokeWidth={hoveredScenario === s.label ? 3 : 2}
                     strokeOpacity={hoveredScenario && hoveredScenario !== s.label ? 0.2 : 1}
@@ -679,7 +696,7 @@ export default function FireScenarios() {
         </div>
 
         <div className={styles.footer}>
-          7% growth · 10% down · $450k home · $1,800/mo childcare/kid · Not financial advice
+          {growthRate}% nominal return · $1,800/mo childcare/kid · Not financial advice
         </div>
       </div>
     </div>
