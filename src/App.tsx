@@ -31,9 +31,9 @@ const THEME_SCENARIO_COLORS: Record<Theme, [string, string, string, string]> = {
 };
 
 const THEME_CHART: Record<Theme, { grid: string; axis: string; tick: string; retireRef: string; rothRef: string }> = {
-  paper:    { grid: "#eae7e1", axis: "#e0dcd4", tick: "#b0aba4", retireRef: "#9a6820", rothRef: "#2e7d52" },
-  midnight: { grid: "#302c3e", axis: "#2a2636", tick: "#7a7570", retireRef: "#d49540", rothRef: "#4dbf7c" },
-  slate:    { grid: "#2d3a52", axis: "#263344", tick: "#6a7890", retireRef: "#e0b050", rothRef: "#3dbd7a" },
+  paper:    { grid: "#eae7e1", axis: "#e0dcd4", tick: "#b0aba4", retireRef: "#a09b95", rothRef: "#a09b95" },
+  midnight: { grid: "#302c3e", axis: "#2a2636", tick: "#7a7570", retireRef: "#8a8790", rothRef: "#8a8790" },
+  slate:    { grid: "#2d3a52", axis: "#263344", tick: "#6a7890", retireRef: "#7888a0", rothRef: "#7888a0" },
 };
 
 export default function FireScenarios() {
