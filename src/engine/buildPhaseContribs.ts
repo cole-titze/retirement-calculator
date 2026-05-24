@@ -1,6 +1,5 @@
-import { CHILDCARE_PER_KID, KID_COST_SCHOOL } from "../constants";
-import type { InvestableConfig, PhaseContrib } from "../types";
-import { getMonthlyInvestable } from "./getMonthlyInvestable";
+import type { Bucket, CostConfig, PhaseContrib } from "../types";
+import { getMonthlyCosts } from "./getMonthlyCosts";
 
 interface BuildPhaseContribsParams {
   currentAge: number;
@@ -9,9 +8,23 @@ interface BuildPhaseContribsParams {
   houseBuyAge: number;
   kid1BirthAge: number;
   kid2BirthAge: number;
-  mortgagePremium: number;
   retireAge: number;
-  config: InvestableConfig;
+  buckets: Bucket[];
+  config: CostConfig;
+}
+
+function effectiveBucketContribs(
+  buckets: Bucket[],
+  costTotal: number,
+): { id: string; label: string; amount: number }[] {
+  let remaining = costTotal;
+  const result = buckets.map(b => ({ id: b.id, label: b.label, amount: b.monthlyContrib }));
+  for (let i = result.length - 1; i >= 0 && remaining > 0; i--) {
+    const deduct = Math.min(result[i].amount, remaining);
+    result[i].amount -= deduct;
+    remaining -= deduct;
+  }
+  return result;
 }
 
 export function buildPhaseContribs({
@@ -21,8 +34,8 @@ export function buildPhaseContribs({
   houseBuyAge,
   kid1BirthAge,
   kid2BirthAge,
-  mortgagePremium,
   retireAge,
+  buckets,
   config,
 }: BuildPhaseContribsParams): PhaseContrib[] {
   const checkAges: { label: string; age: number }[] = [];
@@ -54,34 +67,25 @@ export function buildPhaseContribs({
 
   const seen = new Set<string>();
   return checkAges
-    .filter((p) => {
+    .filter(p => {
       if (seen.has(p.label)) return false;
       seen.add(p.label);
       return p.age >= currentAge && p.age < retireAge;
     })
-    .map((p) => {
-      const c = getMonthlyInvestable(p.age, false, config);
-      const houseCost =
-        hasHouse && p.age < houseBuyAge ? 3000 : hasHouse ? mortgagePremium : 0;
-      const k1 = numKids >= 1 ? p.age - kid1BirthAge : -1;
-      const k2 = numKids >= 2 ? p.age - kid2BirthAge : -1;
-      const childcare =
-        (k1 >= 0 && k1 <= 5 ? CHILDCARE_PER_KID : k1 > 5 && k1 <= 17 ? KID_COST_SCHOOL : 0) +
-        (k2 >= 0 && k2 <= 5 ? CHILDCARE_PER_KID : k2 > 5 && k2 <= 17 ? KID_COST_SCHOOL : 0);
-
+    .map(p => {
+      const costs = getMonthlyCosts(p.age, config);
+      const bucketContribs = effectiveBucketContribs(buckets, costs.total);
+      const totalInvested = bucketContribs.reduce((s, b) => s + b.amount, 0);
       return {
         label: p.label,
         age: p.age,
         snap: {
-          monthlyRoth: c.roth,
-          monthlyWifeTrad: c.wifeTrad,
-          monthlyTaxable: c.taxable,
-          monthlyMetals: c.metals,
-          monthlyHouseSave: hasHouse && p.age < houseBuyAge ? 3000 : 0,
-          monthlyMortgage: hasHouse && p.age >= houseBuyAge ? mortgagePremium : 0,
-          monthlyChildcare: childcare,
-          totalInvested: c.roth + c.wifeTrad + c.taxable + c.metals,
-          totalOut: houseCost + childcare,
+          bucketContribs,
+          totalInvested,
+          monthlyHouseSave: costs.houseSave,
+          monthlyMortgage: costs.mortgage,
+          monthlyChildcare: costs.childcare,
+          totalOut: costs.total,
         },
       };
     });

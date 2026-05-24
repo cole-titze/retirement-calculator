@@ -1,9 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { runScenario } from "./runScenario";
-import { getBase } from "./getBase";
 import { SCENARIO_DEFS } from "../scenarios";
+import type { Bucket } from "../types";
 
-const base = getBase(0);
+const DEFAULT_BUCKETS: Bucket[] = [
+  { id: "roth",   label: "Roth 401k", balance: 0, monthlyContrib: 1958, annualReturn: 7 },
+  { id: "market", label: "Market",    balance: 0, monthlyContrib: 0,    annualReturn: 7 },
+];
+
+const LARGE_BUCKETS: Bucket[] = [
+  { id: "roth",   label: "Roth 401k", balance: 1000000, monthlyContrib: 1958, annualReturn: 7 },
+  { id: "market", label: "Market",    balance: 0,       monthlyContrib: 0,    annualReturn: 7 },
+];
 
 const baseParams = {
   currentAge: 26,
@@ -13,7 +21,7 @@ const baseParams = {
   retireAge: 50,
   inflationRate: 0,
   withdrawalRate: 0.04,
-  base,
+  buckets: DEFAULT_BUCKETS,
 };
 
 describe("runScenario — basic shape", () => {
@@ -61,25 +69,21 @@ describe("runScenario — phases", () => {
 
 describe("runScenario — coast FIRE", () => {
   it("finds a coastFireAge for all four scenarios with sufficient assets", () => {
-    // 1M starting assets projects well past any scenario's FIRE number by retireAge
-    const largeBase = getBase(1000000);
     SCENARIO_DEFS.forEach(def => {
-      const result = runScenario({ ...def, ...baseParams, base: largeBase });
+      const result = runScenario({ ...def, ...baseParams, buckets: LARGE_BUCKETS });
       expect(result.coastFireAge).not.toBeNull();
     });
   });
 
   it("coastLabel contains the word COAST", () => {
-    const largeBase = getBase(1000000);
-    const result = runScenario({ ...SCENARIO_DEFS[0], ...baseParams, base: largeBase });
+    const result = runScenario({ ...SCENARIO_DEFS[0], ...baseParams, buckets: LARGE_BUCKETS });
     if (result.coastLabel) {
       expect(result.coastLabel).toContain("COAST");
     }
   });
 
   it("coastFireAge is within [currentAge, retireAge]", () => {
-    const largeBase = getBase(1000000);
-    const result = runScenario({ ...SCENARIO_DEFS[0], ...baseParams, base: largeBase });
+    const result = runScenario({ ...SCENARIO_DEFS[0], ...baseParams, buckets: LARGE_BUCKETS });
     if (result.coastFireAge !== null) {
       expect(result.coastFireAge).toBeGreaterThanOrEqual(baseParams.currentAge);
       expect(result.coastFireAge).toBeLessThanOrEqual(baseParams.retireAge);
@@ -89,7 +93,7 @@ describe("runScenario — coast FIRE", () => {
 
 describe("runScenario — house scenarios", () => {
   it("house scenario accumulates positive portfolio", () => {
-    const result = runScenario({ ...SCENARIO_DEFS[1], ...baseParams }); // House Only
+    const result = runScenario({ ...SCENARIO_DEFS[1], ...baseParams });
     const atRetire = result.data.find(d => d.age === baseParams.retireAge)!;
     expect(atRetire.total).toBeGreaterThan(0);
   });
@@ -102,5 +106,15 @@ describe("runScenario — inflation", () => {
     const retireNoInfl = noInflation.data.find(d => d.age === baseParams.retireAge)!;
     const retireHighInfl = highInflation.data.find(d => d.age === baseParams.retireAge)!;
     expect(retireNoInfl.total).toBeGreaterThan(retireHighInfl.total);
+  });
+});
+
+describe("runScenario — bucket differences", () => {
+  it("no-kids scenario accumulates more than 2-kids scenario", () => {
+    const noKids = runScenario({ ...SCENARIO_DEFS[0], ...baseParams });
+    const twoKids = runScenario({ ...SCENARIO_DEFS[3], ...baseParams });
+    const retire0 = noKids.data.find(d => d.age === baseParams.retireAge)!;
+    const retire2 = twoKids.data.find(d => d.age === baseParams.retireAge)!;
+    expect(retire0.total).toBeGreaterThanOrEqual(retire2.total);
   });
 });

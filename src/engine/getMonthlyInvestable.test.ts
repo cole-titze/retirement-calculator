@@ -1,96 +1,73 @@
 import { describe, it, expect } from "vitest";
-import { getMonthlyInvestable } from "./getMonthlyInvestable";
-import { MONTHLY_BASE, CHILDCARE_PER_KID, KID_COST_SCHOOL } from "../constants";
-import type { InvestableConfig } from "../types";
+import { getMonthlyCosts } from "./getMonthlyCosts";
+import { CHILDCARE_PER_KID, KID_COST_SCHOOL } from "../constants";
+import type { CostConfig } from "../types";
 
-const baseConfig: InvestableConfig = {
+const baseConfig: CostConfig = {
   hasHouse: false,
   numKids: 0,
   houseBuyAge: 28,
   kid1BirthAge: 29,
   kid2BirthAge: 31,
   mortgagePremium: 1500,
-  postCoastInvest: 0,
   rentAmount: 1500,
 };
 
-describe("getMonthlyInvestable — no house, no kids", () => {
-  it("returns full MONTHLY_BASE when not coasting", () => {
-    const result = getMonthlyInvestable(30, false, baseConfig);
-    expect(result.roth).toBe(MONTHLY_BASE.yourRoth);
-    expect(result.wifeTrad).toBe(MONTHLY_BASE.wifeTraditional);
-    expect(result.taxable).toBe(MONTHLY_BASE.taxable);
-    expect(result.metals).toBe(MONTHLY_BASE.metals);
-  });
-
-  it("taxable never goes below zero", () => {
-    const result = getMonthlyInvestable(30, false, baseConfig);
-    expect(result.taxable).toBeGreaterThanOrEqual(0);
+describe("getMonthlyCosts — no house, no kids", () => {
+  it("returns zero total for no house no kids", () => {
+    const result = getMonthlyCosts(30, baseConfig);
+    expect(result.total).toBe(0);
   });
 });
 
-describe("getMonthlyInvestable — house saving period", () => {
-  const config: InvestableConfig = { ...baseConfig, hasHouse: true, kid1BirthAge: 30, kid2BirthAge: 32 };
+describe("getMonthlyCosts — house saving period", () => {
+  const config: CostConfig = { ...baseConfig, hasHouse: true, kid1BirthAge: 30, kid2BirthAge: 32 };
 
-  it("deducts 3000 from taxable before house purchase", () => {
-    const result = getMonthlyInvestable(26, false, config);
-    const expected = Math.max(0, MONTHLY_BASE.taxable - 3000);
-    expect(result.taxable).toBe(expected);
+  it("houseSave is 3000 before house purchase", () => {
+    const result = getMonthlyCosts(26, config);
+    expect(result.houseSave).toBe(3000);
   });
 
-  it("deducts mortgagePremium from taxable after house purchase", () => {
-    const result = getMonthlyInvestable(29, false, config);
-    const expected = Math.max(0, MONTHLY_BASE.taxable - config.mortgagePremium);
-    expect(result.taxable).toBe(expected);
+  it("mortgage equals mortgagePremium after house purchase", () => {
+    const result = getMonthlyCosts(29, config);
+    expect(result.mortgage).toBe(config.mortgagePremium);
   });
 
-  it("roth is unaffected by house costs", () => {
-    const prePurchase = getMonthlyInvestable(26, false, config);
-    const postPurchase = getMonthlyInvestable(29, false, config);
-    expect(prePurchase.roth).toBe(MONTHLY_BASE.yourRoth);
-    expect(postPurchase.roth).toBe(MONTHLY_BASE.yourRoth);
+  it("house costs do not appear in childcare field", () => {
+    const result = getMonthlyCosts(26, config);
+    expect(result.childcare).toBe(0);
   });
 });
 
-describe("getMonthlyInvestable — kids costs", () => {
-  const config: InvestableConfig = { ...baseConfig, numKids: 1, kid1BirthAge: 29 };
+describe("getMonthlyCosts — kids costs", () => {
+  const config: CostConfig = { ...baseConfig, numKids: 1, kid1BirthAge: 29 };
 
-  it("deducts childcare cost during ages 0–5 of kid", () => {
-    const result = getMonthlyInvestable(31, false, config); // kid age 2
-    const expected = Math.max(0, MONTHLY_BASE.taxable - CHILDCARE_PER_KID);
-    expect(result.taxable).toBe(expected);
+  it("childcare cost during ages 0–5 of kid", () => {
+    const result = getMonthlyCosts(31, config); // kid age 2
+    expect(result.childcare).toBe(CHILDCARE_PER_KID);
   });
 
-  it("deducts school cost during ages 6–17 of kid", () => {
-    const result = getMonthlyInvestable(36, false, config); // kid age 7
-    const expected = Math.max(0, MONTHLY_BASE.taxable - KID_COST_SCHOOL);
-    expect(result.taxable).toBe(expected);
+  it("school cost during ages 6–17 of kid", () => {
+    const result = getMonthlyCosts(36, config); // kid age 7
+    expect(result.childcare).toBe(KID_COST_SCHOOL);
   });
 
   it("no kid deduction once kid is 18+", () => {
-    const result = getMonthlyInvestable(48, false, config); // kid age 19
-    expect(result.taxable).toBe(MONTHLY_BASE.taxable);
+    const result = getMonthlyCosts(48, config); // kid age 19
+    expect(result.childcare).toBe(0);
   });
 });
 
-describe("getMonthlyInvestable — coasting", () => {
-  it("caps total at postCoastInvest when coasting", () => {
-    const config: InvestableConfig = { ...baseConfig, postCoastInvest: 1000 };
-    const result = getMonthlyInvestable(35, true, config);
-    const total = result.roth + result.wifeTrad + result.taxable + result.metals;
-    expect(total).toBe(1000);
+describe("getMonthlyCosts — two kids", () => {
+  const config: CostConfig = { ...baseConfig, numKids: 2, kid1BirthAge: 29, kid2BirthAge: 31 };
+
+  it("both kids in childcare simultaneously", () => {
+    const result = getMonthlyCosts(32, config); // kid1 age 3, kid2 age 1
+    expect(result.childcare).toBe(CHILDCARE_PER_KID * 2);
   });
 
-  it("fills roth first up to its cap when coasting", () => {
-    const config: InvestableConfig = { ...baseConfig, postCoastInvest: 500 };
-    const result = getMonthlyInvestable(35, true, config);
-    expect(result.roth).toBe(Math.min(MONTHLY_BASE.yourRoth, 500));
-  });
-
-  it("returns all zeros when postCoastInvest is 0 and coasting", () => {
-    const config: InvestableConfig = { ...baseConfig, postCoastInvest: 0 };
-    const result = getMonthlyInvestable(35, true, config);
-    const total = result.roth + result.wifeTrad + result.taxable + result.metals;
-    expect(total).toBe(0);
+  it("total equals sum of parts", () => {
+    const result = getMonthlyCosts(32, config);
+    expect(result.total).toBe(result.houseSave + result.mortgage + result.childcare);
   });
 });

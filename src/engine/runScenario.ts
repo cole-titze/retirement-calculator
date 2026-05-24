@@ -1,14 +1,19 @@
-import {
-  GROWTH,
-  METALS_GROWTH,
-  COLLEGE_PER_KID,
-  BASE_DEFAULT,
-} from "../constants";
+import { COLLEGE_PER_KID } from "../constants";
 import type { ScenarioParams, ScenarioResult } from "../types";
 import { buildPhaseContribs } from "./buildPhaseContribs";
-import { getMonthlyInvestable } from "./getMonthlyInvestable";
+import { getMonthlyCosts } from "./getMonthlyCosts";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+// Deducts `amount` from balances starting from the last bucket working backward.
+function applyLifeCosts(balances: number[], amount: number): void {
+  let remaining = amount;
+  for (let i = balances.length - 1; i >= 0 && remaining > 0; i--) {
+    const deduct = Math.min(Math.max(0, balances[i]), remaining);
+    balances[i] = Math.max(0, balances[i] - deduct);
+    remaining -= deduct;
+  }
+}
 
 export function runScenario({
   hasHouse,
@@ -16,59 +21,58 @@ export function runScenario({
   label,
   color,
   retireSpend,
+  buckets,
   currentAge = 30,
   mortgagePremium = 1500,
   postCoastInvest = 0,
   rentAmount = 1500,
   retireAge = 50,
-  growthRate = GROWTH,
   inflationRate = 0,
   withdrawalRate = 0.04,
-  base = BASE_DEFAULT,
 }: ScenarioParams): ScenarioResult {
   const houseBuyAge = 28;
   const kid1BirthAge = hasHouse ? 30 : 29;
   const kid2BirthAge = kid1BirthAge + 2;
-  const growth = Math.max(0, growthRate - inflationRate);
 
-  const config = {
-    hasHouse,
-    numKids,
-    houseBuyAge,
-    kid1BirthAge,
-    kid2BirthAge,
-    mortgagePremium,
-    postCoastInvest,
-    rentAmount,
-  };
+  const config = { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount };
+
+  // Real growth rate per bucket (clamped to ≥ 0)
+  const realRates = buckets.map(b => Math.max(0, b.annualReturn / 100 - inflationRate));
+  const totalMonthlyContrib = buckets.reduce((s, b) => s + b.monthlyContrib, 0);
+
+  // Returns effective per-bucket contribution amounts after deducting life costs.
+  function effectiveContribs(monthlyCostTotal: number): number[] {
+    let remaining = monthlyCostTotal;
+    const amounts = buckets.map(b => b.monthlyContrib);
+    for (let i = amounts.length - 1; i >= 0 && remaining > 0; i--) {
+      const deduct = Math.min(amounts[i], remaining);
+      amounts[i] -= deduct;
+      remaining -= deduct;
+    }
+    // If costs exceed all contributions, deduct the excess from balances separately
+    return amounts;
+  }
 
   // ── First pass: find coast FIRE to month precision ──
   let coastFireAge: number | null = null;
   let coastFireMonth: number | null = null;
   {
-    const MONTHLY_GROWTH = Math.pow(1 + growth, 1 / 12);
-    const MONTHLY_GROWTH_METALS = Math.pow(1 + METALS_GROWTH, 1 / 12);
-    let r = base.yourRoth, w = base.wifeTraditional, t = base.taxable;
-    let c = base.company, m = base.metals, s = base.sgov;
-
+    const monthlyGrowths = realRates.map(r => Math.pow(1 + r, 1 / 12));
+    const balances = buckets.map(b => b.balance);
     const fireNum = retireSpend / withdrawalRate;
 
     outer: for (let age = currentAge; age <= retireAge; age++) {
       for (let mo = 0; mo < 12; mo++) {
         const fracAge = age + mo / 12;
-
-        r *= MONTHLY_GROWTH; w *= MONTHLY_GROWTH; t *= MONTHLY_GROWTH;
-        c *= age < 35 ? 1.0 : Math.pow(1.04, 1 / 12);
-        m *= MONTHLY_GROWTH_METALS;
+        for (let i = 0; i < balances.length; i++) balances[i] *= monthlyGrowths[i];
 
         if (mo === 0) {
-          if (numKids >= 1 && age - kid1BirthAge === 18) t -= COLLEGE_PER_KID;
-          if (numKids >= 2 && age - kid2BirthAge === 18) t -= COLLEGE_PER_KID;
+          if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
+          if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
         }
 
         const yearsLeft = Math.max(0, retireAge - fracAge);
-        const totalNow = r + w * 0.8 + t + c + m + s;
-        const projected = totalNow * Math.pow(1 + growth, yearsLeft);
+        const projected = balances.reduce((s, bal, i) => s + bal * Math.pow(1 + realRates[i], yearsLeft), 0);
 
         if (!coastFireAge && projected >= fireNum) {
           coastFireAge = age;
@@ -76,23 +80,20 @@ export function runScenario({
           break outer;
         }
 
-        const contrib = getMonthlyInvestable(fracAge, false, config);
-        r += contrib.roth; w += contrib.wifeTrad;
-        t += contrib.taxable; m += contrib.metals;
+        const costs = getMonthlyCosts(fracAge, config);
+        const contribs = effectiveContribs(costs.total);
+        const excess = costs.total - buckets.reduce((s, b) => s + b.monthlyContrib, 0);
+        if (excess > 0) applyLifeCosts(balances, excess);
+        for (let i = 0; i < balances.length; i++) balances[i] += contribs[i];
       }
     }
   }
 
   const coastLabel =
-    coastFireAge !== null
-      ? `COAST ${MONTHS[coastFireMonth ?? 0]} ${coastFireAge}`
-      : null;
+    coastFireAge !== null ? `COAST ${MONTHS[coastFireMonth ?? 0]} ${coastFireAge}` : null;
 
   // ── Second pass: full simulation age currentAge → 70 ──
-  let yourRoth = base.yourRoth, wifeTrad = base.wifeTraditional;
-  let taxable = base.taxable, company = base.company;
-  let metals = base.metals, sgov = base.sgov;
-
+  const balances = buckets.map(b => b.balance);
   const data = [];
 
   for (let age = currentAge; age <= 70; age++) {
@@ -101,40 +102,45 @@ export function runScenario({
     const isRetired = age >= 60;
     const isCoasting = coastFireAge !== null && age >= coastFireAge && isAccumulating;
 
-    yourRoth *= (1 + growth); wifeTrad *= (1 + growth);
-    taxable  *= (1 + growth); company  *= age < 35 ? 1.0 : 1.04;
-    metals   *= (1 + METALS_GROWTH);
+    for (let i = 0; i < balances.length; i++) balances[i] *= (1 + realRates[i]);
 
     if (isAccumulating) {
       if (!isCoasting || postCoastInvest > 0) {
-        const contrib = getMonthlyInvestable(age, isCoasting, config);
-        yourRoth += contrib.roth   * 12;
-        wifeTrad += contrib.wifeTrad * 12;
-        taxable  += contrib.taxable * 12;
-        metals   += contrib.metals  * 12;
+        const costs = getMonthlyCosts(age, config);
+        const annualCostTotal = costs.total * 12;
+
+        let annualContribs: number[];
+        if (isCoasting) {
+          annualContribs = buckets.map(b =>
+            totalMonthlyContrib > 0 ? (b.monthlyContrib / totalMonthlyContrib) * postCoastInvest * 12 : 0,
+          );
+        } else {
+          annualContribs = effectiveContribs(costs.total).map(m => m * 12);
+          // If costs exceed total contributions, deduct excess from balances
+          const contributionTotal = annualContribs.reduce((s, v) => s + v, 0);
+          const excess = annualCostTotal - (totalMonthlyContrib * 12 - contributionTotal);
+          if (excess > 0) applyLifeCosts(balances, excess);
+        }
+
+        for (let i = 0; i < balances.length; i++) balances[i] += annualContribs[i];
       }
 
-      if (numKids >= 1 && age - kid1BirthAge === 18) taxable -= COLLEGE_PER_KID;
-      if (numKids >= 2 && age - kid2BirthAge === 18) taxable -= COLLEGE_PER_KID;
+      if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
+      if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
     }
 
-    if (isBridge) {
-      if (taxable >= retireSpend) {
-        taxable -= retireSpend;
-      } else {
-        company = Math.max(0, company - (retireSpend - taxable));
-        taxable = 0;
-      }
-    }
+    if (isBridge) applyLifeCosts(balances, retireSpend);
 
     if (isRetired) {
-      const totalRetire = yourRoth + wifeTrad;
-      const rothShare = totalRetire > 0 ? yourRoth / totalRetire : 0.6;
-      yourRoth = Math.max(0, yourRoth - retireSpend * rothShare);
-      wifeTrad = Math.max(0, wifeTrad - retireSpend * (1 - rothShare));
+      const total = balances.reduce((s, b) => s + b, 0);
+      if (total > 0) {
+        for (let i = 0; i < balances.length; i++) {
+          balances[i] = Math.max(0, balances[i] - retireSpend * (balances[i] / total));
+        }
+      }
     }
 
-    const liquidTotal = yourRoth + wifeTrad + taxable + company + metals + sgov;
+    const liquidTotal = balances.reduce((s, b) => s + b, 0);
     data.push({
       age,
       total: Math.round(liquidTotal / 1000),
@@ -151,21 +157,10 @@ export function runScenario({
     houseBuyAge,
     kid1BirthAge,
     kid2BirthAge,
-    mortgagePremium,
     retireAge,
+    buckets,
     config,
   });
 
-  return {
-    label,
-    color,
-    data,
-    coastFireAge,
-    coastFireMonth,
-    coastLabel,
-    retireSpend,
-    hasHouse,
-    numKids,
-    phaseContribs,
-  };
+  return { label, color, data, coastFireAge, coastFireMonth, coastLabel, retireSpend, hasHouse, numKids, phaseContribs };
 }

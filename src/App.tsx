@@ -3,12 +3,11 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
 } from "recharts";
-import { getBase } from "./engine/getBase";
 import { runScenario } from "./engine/runScenario";
 import { SCENARIO_DEFS } from "./scenarios";
 import { CustomTooltip } from "./components/CustomTooltip";
 import { fmtM } from "./utils";
-import type { ScenarioResult } from "./types";
+import type { Bucket, ScenarioResult } from "./types";
 import styles from "./App.module.scss";
 
 type Theme = "paper" | "midnight" | "slate";
@@ -36,6 +35,33 @@ const THEME_CHART: Record<Theme, { grid: string; axis: string; tick: string; ret
   slate:    { grid: "#2d3a52", axis: "#263344", tick: "#6a7890", retireRef: "#7888a0", rothRef: "#7888a0" },
 };
 
+const BUCKET_DOT_CLASSES = [
+  styles.bucketDotEmerald,
+  styles.bucketDotBlue,
+  styles.bucketDotGold,
+  styles.bucketDotPurple,
+  styles.bucketDotPink,
+  styles.bucketDotOrange,
+];
+
+const BUCKET_CELL_CLASSES = [
+  styles.contribCellEmerald,
+  styles.contribCellBlue,
+  styles.contribCellGold,
+  styles.contribCellPurple,
+  styles.contribCellPink,
+  styles.contribCellOrange,
+];
+
+const THEME_BG: Record<Theme, string> = { paper: "#f8f6f1", midnight: "#17151c", slate: "#1b2130" };
+
+const DEFAULT_BUCKETS: Bucket[] = [
+  { id: "roth",      label: "Roth 401k",     balance: 0, monthlyContrib: 1958, annualReturn: 7   },
+  { id: "market",    label: "Market",         balance: 0, monthlyContrib: 0,    annualReturn: 7   },
+  { id: "metals",    label: "Metals",         balance: 0, monthlyContrib: 0,    annualReturn: 5   },
+  { id: "emergency", label: "Emergency Fund", balance: 0, monthlyContrib: 0,    annualReturn: 4.5 },
+];
+
 export default function FireScenarios() {
   const [activeScenarios, setActiveScenarios] = useState(SCENARIO_DEFS.map(s => s.label));
   const [hoveredScenario, setHoveredScenario] = useState<string | null>(null);
@@ -44,7 +70,6 @@ export default function FireScenarios() {
     window.matchMedia("(prefers-color-scheme: dark)").matches ? "slate" : "paper"
   );
 
-  const THEME_BG: Record<Theme, string> = { paper: "#f8f6f1", midnight: "#17151c", slate: "#1b2130" };
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -71,36 +96,35 @@ export default function FireScenarios() {
   const [inflationRaw, setInflationRaw] = useState(() => String(getQSP('inflation', 4, 0, 10)));
   const [withdrawalRate, setWithdrawalRate] = useState(() => getQSP('withdrawal', 4, 1, 10));
   const [withdrawalRaw, setWithdrawalRaw] = useState(() => String(getQSP('withdrawal', 4, 1, 10)));
-  const [growthRate, setGrowthRate] = useState(() => getQSP('growth', 7, 1, 20));
-  const [growthRaw, setGrowthRaw] = useState(() => String(getQSP('growth', 7, 1, 20)));
-  const [startingAssets, setStartingAssets] = useState(() => getQSP('assets', 0, 0, 1e9));
-  const [startingAssetsRaw, setStartingAssetsRaw] = useState(() => String(getQSP('assets', 0, 0, 1e9)));
+
+  const [buckets, setBuckets] = useState<Bucket[]>(DEFAULT_BUCKETS);
 
   useEffect(() => {
     const p = new URLSearchParams();
-    if (currentAge !== 30)        p.set('age',       String(currentAge));
-    if (startingAssets !== 0)     p.set('assets',    String(startingAssets));
-    if (rent !== 1500)            p.set('rent',      String(rent));
-    if (mortgage !== 3000)        p.set('mortgage',  String(mortgage));
-    if (postCoastInvest !== 0)    p.set('postCoast', String(postCoastInvest));
-    if (retireAge !== 50)         p.set('retireAge', String(retireAge));
-    if (inflation !== 4)          p.set('inflation', String(inflation));
-    if (withdrawalRate !== 4)     p.set('withdrawal',String(withdrawalRate));
-    if (growthRate !== 7)         p.set('growth',    String(growthRate));
+    if (currentAge !== 30)      p.set('age',       String(currentAge));
+    if (rent !== 1500)          p.set('rent',      String(rent));
+    if (mortgage !== 3000)      p.set('mortgage',  String(mortgage));
+    if (postCoastInvest !== 0)  p.set('postCoast', String(postCoastInvest));
+    if (retireAge !== 50)       p.set('retireAge', String(retireAge));
+    if (inflation !== 4)        p.set('inflation', String(inflation));
+    if (withdrawalRate !== 4)   p.set('withdrawal',String(withdrawalRate));
     const qs = p.toString();
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
-  }, [currentAge, startingAssets, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate, growthRate]);
+  }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate]);
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;
   const withdrawalRateDecimal = withdrawalRate / 100;
-  const growthRateDecimal = growthRate / 100;
-  const base = getBase(startingAssets);
   const scenarioColors = THEME_SCENARIO_COLORS[theme];
   const chart = THEME_CHART[theme];
 
+  const totalContrib = buckets.reduce((s, b) => s + b.monthlyContrib, 0);
+  const avgBucketReturn = totalContrib > 0
+    ? buckets.reduce((s, b) => s + b.annualReturn * (b.monthlyContrib / totalContrib), 0)
+    : (buckets[0]?.annualReturn ?? 7);
+
   const activeData: ScenarioResult[] = SCENARIO_DEFS.map((d, i) =>
-    runScenario({ ...d, color: scenarioColors[i], currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, growthRate: growthRateDecimal, inflationRate, withdrawalRate: withdrawalRateDecimal, base })
+    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
@@ -116,6 +140,21 @@ export default function FireScenarios() {
         : [...prev, label]
     );
   };
+
+  const updateBucket = (id: string, patch: Partial<Bucket>) =>
+    setBuckets(prev => prev.map(b => b.id === id ? { ...b, ...patch } : b));
+
+  const deleteBucket = (id: string) =>
+    setBuckets(prev => prev.length > 1 ? prev.filter(b => b.id !== id) : prev);
+
+  const addBucket = () =>
+    setBuckets(prev => [...prev, {
+      id: `b${Date.now()}`,
+      label: "New Bucket",
+      balance: 0,
+      monthlyContrib: 0,
+      annualReturn: 7,
+    }]);
 
   const atRetire = (s: ScenarioResult) => s.data.find(d => d.age === retireAge);
   const atRoth   = (s: ScenarioResult) => s.data.find(d => d.age === 60);
@@ -180,27 +219,6 @@ export default function FireScenarios() {
                 }}
                 className={`${styles.input} ${styles.inputMd}`}
               />
-            </div>
-            <div className={styles.inputGroup}>
-              <div className={styles.inputLabel}>Starting Assets</div>
-              <div className={styles.inputRow}>
-                <span className={styles.inputPrefix}>$</span>
-                <input
-                  type="number"
-                  value={startingAssetsRaw}
-                  onChange={e => {
-                    setStartingAssetsRaw(e.target.value);
-                    const v = Number(e.target.value);
-                    if (v >= 0) setStartingAssets(v);
-                  }}
-                  onBlur={e => {
-                    const v = Math.max(0, Number(e.target.value) || 0);
-                    setStartingAssets(v);
-                    setStartingAssetsRaw(String(v));
-                  }}
-                  className={`${styles.input} ${styles.inputXl}`}
-                />
-              </div>
             </div>
           </div>
 
@@ -300,7 +318,7 @@ export default function FireScenarios() {
                 />
                 <span className={styles.inputPrefix}>%</span>
               </div>
-              <div className={styles.inputHint}>real return: {Math.max(0, growthRate - inflation).toFixed(0)}%</div>
+              <div className={styles.inputHint}>avg real: {Math.max(0, avgBucketReturn - inflation).toFixed(1)}%</div>
             </div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Withdrawal Rate</div>
@@ -324,30 +342,89 @@ export default function FireScenarios() {
               </div>
               <div className={styles.inputHint}>FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)</div>
             </div>
-            <div className={styles.inputGroup}>
-              <div className={styles.inputLabel}>Investment Return</div>
-              <div className={styles.inputRow}>
-                <input
-                  type="number"
-                  value={growthRaw}
-                  onChange={e => {
-                    setGrowthRaw(e.target.value);
-                    const v = Number(e.target.value);
-                    if (v >= 1 && v <= 20) setGrowthRate(v);
-                  }}
-                  onBlur={e => {
-                    const v = Math.min(20, Math.max(1, Number(e.target.value) || 7));
-                    setGrowthRate(v);
-                    setGrowthRaw(String(v));
-                  }}
-                  className={`${styles.input} ${styles.inputSm}`}
-                />
-                <span className={styles.inputPrefix}>%</span>
-              </div>
-              <div className={styles.inputHint}>nominal annual</div>
-            </div>
           </div>
 
+        </div>
+
+        {/* Bucket Editor */}
+        <div className={styles.bucketsSection}>
+          <div className={styles.bucketsSectionHeader}>
+            <div className={styles.sectionLabel}>Investment Buckets</div>
+            <button className={styles.bucketAddBtn} onClick={addBucket}>
+              + Add Bucket
+            </button>
+          </div>
+          <div className={styles.bucketHint}>
+            Life costs (mortgage, childcare) reduce the last bucket's contribution first.
+          </div>
+          <div className={styles.bucketList}>
+            {buckets.map(bucket => (
+              <div key={bucket.id} className={styles.bucketRow}>
+                <div className={styles.bucketLabelField}>
+                  <div className={styles.bucketFieldLabel}>Label</div>
+                  <input
+                    type="text"
+                    value={bucket.label}
+                    onChange={e => updateBucket(bucket.id, { label: e.target.value })}
+                    className={styles.bucketLabelInput}
+                  />
+                </div>
+                <div className={styles.bucketNumGroup}>
+                  <div className={styles.bucketField}>
+                    <div className={styles.bucketFieldLabel}>Balance</div>
+                    <div className={styles.bucketFieldRow}>
+                      <span className={styles.bucketPrefix}>$</span>
+                      <input
+                        type="number"
+                        value={bucket.balance}
+                        min={0}
+                        onChange={e => updateBucket(bucket.id, { balance: Math.max(0, Number(e.target.value) || 0) })}
+                        className={`${styles.bucketInput} ${styles.bucketInputLg}`}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.bucketField}>
+                    <div className={styles.bucketFieldLabel}>Monthly</div>
+                    <div className={styles.bucketFieldRow}>
+                      <span className={styles.bucketPrefix}>$</span>
+                      <input
+                        type="number"
+                        value={bucket.monthlyContrib}
+                        min={0}
+                        onChange={e => updateBucket(bucket.id, { monthlyContrib: Math.max(0, Number(e.target.value) || 0) })}
+                        className={`${styles.bucketInput} ${styles.bucketInputLg}`}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.bucketField}>
+                    <div className={styles.bucketFieldLabel}>Return</div>
+                    <div className={styles.bucketFieldRow}>
+                      <input
+                        type="number"
+                        value={bucket.annualReturn}
+                        min={0}
+                        max={50}
+                        step={0.5}
+                        onChange={e => updateBucket(bucket.id, { annualReturn: Math.min(50, Math.max(0, Number(e.target.value) || 0)) })}
+                        className={`${styles.bucketInput} ${styles.bucketInputMd}`}
+                      />
+                      <span className={styles.bucketPrefix}>%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.bucketDeleteField}>
+                  <button
+                    className={styles.bucketDeleteBtn}
+                    onClick={() => deleteBucket(bucket.id)}
+                    disabled={buckets.length <= 1}
+                    aria-label={`Delete ${bucket.label} bucket`}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Scenario Toggle Buttons */}
@@ -489,7 +566,7 @@ export default function FireScenarios() {
                   <span className={styles.statVal}>${(s.retireSpend / 1000).toFixed(0)}k/yr</span>
                 </div>
                 <div className={styles.progressTrack}>
-                  {/* CSS custom property — only safe way to set a computed layout value without inline styles */}
+                  {/* CSS custom property for computed layout value */}
                   {/* eslint-disable-next-line react/forbid-dom-props */}
                   <div className={styles.progressFill} style={{ "--fill-width": `${fillPct}%` } as React.CSSProperties} />
                 </div>
@@ -519,19 +596,14 @@ export default function FireScenarios() {
             if (!s) return null;
             const phases = s.phaseContribs;
             const colTemplate = `160px repeat(${phases.length}, 1fr)`;
-            const buckets = [
-              { key: "monthlyRoth",     label: "Your Roth 401k",    dotClass: styles.bucketDotEmerald, cellClass: styles.contribCellEmerald },
-              { key: "monthlyWifeTrad", label: "Wife's Trad 401k",  dotClass: styles.bucketDotPurple,  cellClass: styles.contribCellPurple },
-              { key: "monthlyTaxable",  label: "Taxable Brokerage", dotClass: styles.bucketDotBlue,    cellClass: styles.contribCellBlue },
-              { key: "monthlyMetals",   label: "Precious Metals",   dotClass: styles.bucketDotGold,    cellClass: styles.contribCellGold },
-            ] as const;
-            const costs = [
-              { key: "monthlyHouseSave",  label: "House Savings",           dotClass: styles.bucketDotPurple, cellClass: styles.contribCellPurple },
-              { key: "monthlyMortgage",   label: "Mortgage",                dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },
-              { key: "monthlyChildcare",  label: "Kids (Childcare/School)", dotClass: styles.bucketDotOrange, cellClass: styles.contribCellOrange },
+            const phaseBuckets = phases[0]?.snap.bucketContribs ?? [];
+            const lifeCosts = [
+              { key: "monthlyHouseSave" as const,  label: "House Savings",           dotClass: styles.bucketDotPurple, cellClass: styles.contribCellPurple },
+              { key: "monthlyMortgage" as const,   label: "Mortgage",                dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },
+              { key: "monthlyChildcare" as const,  label: "Kids (Childcare/School)", dotClass: styles.bucketDotOrange, cellClass: styles.contribCellOrange },
             ] as const;
             return (
-              // CSS custom property for dynamic phase column count — cascades to all child rows
+              // CSS custom property for dynamic phase column count
               // eslint-disable-next-line react/forbid-dom-props
               <div data-scenario={s.label} className={styles.contribTable} style={{ "--col-template": colTemplate } as React.CSSProperties}>
                 <div className={styles.contribTableHeader}>
@@ -542,22 +614,27 @@ export default function FireScenarios() {
                 </div>
                 <div className={styles.contribBody}>
                   <div className={styles.contribSubheader}>Investing</div>
-                  {buckets.map(b => (
-                    <div key={b.key} className={styles.contribRow}>
-                      <div className={styles.contribBucketName}>
-                        <span className={`${styles.bucketDot} ${b.dotClass}`} />
-                        {b.label}
+                  {phaseBuckets.map((pb, bIdx) => {
+                    const dotClass = BUCKET_DOT_CLASSES[bIdx % BUCKET_DOT_CLASSES.length];
+                    const cellClass = BUCKET_CELL_CLASSES[bIdx % BUCKET_CELL_CLASSES.length];
+                    return (
+                      <div key={pb.id} className={styles.contribRow}>
+                        <div className={styles.contribBucketName}>
+                          <span className={`${styles.bucketDot} ${dotClass}`} />
+                          {pb.label}
+                        </div>
+                        {phases.map((p, i) => {
+                          const bc = p.snap.bucketContribs.find(b => b.id === pb.id);
+                          const val = bc?.amount ?? 0;
+                          return (
+                            <div key={i} className={`${styles.contribCell} ${val === 0 ? styles.contribCellZero : cellClass}`}>
+                              {val === 0 ? "—" : `$${val.toLocaleString()}`}
+                            </div>
+                          );
+                        })}
                       </div>
-                      {phases.map((p, i) => {
-                        const val = p.snap[b.key];
-                        return (
-                          <div key={i} className={`${styles.contribCell} ${val === 0 ? styles.contribCellZero : b.cellClass}`}>
-                            {val === 0 ? "—" : `$${val.toLocaleString()}`}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div className={styles.contribTotalRow}>
                     <div className={styles.contribTotalLabel}>Total Invested/mo</div>
                     {phases.map((p, i) => (
@@ -570,18 +647,18 @@ export default function FireScenarios() {
                 {phases.some(p => p.snap.totalOut > 0) && (
                   <div className={styles.lifeCostsSection}>
                     <div className={styles.contribSubheader}>Life Costs</div>
-                    {costs.map(b => {
-                      if (!phases.some(p => p.snap[b.key] > 0)) return null;
+                    {lifeCosts.map(cost => {
+                      if (!phases.some(p => p.snap[cost.key] > 0)) return null;
                       return (
-                        <div key={b.key} className={styles.contribRow}>
+                        <div key={cost.key} className={styles.contribRow}>
                           <div className={styles.contribBucketName}>
-                            <span className={`${styles.bucketDot} ${b.dotClass}`} />
-                            {b.label}
+                            <span className={`${styles.bucketDot} ${cost.dotClass}`} />
+                            {cost.label}
                           </div>
                           {phases.map((p, i) => {
-                            const val = p.snap[b.key];
+                            const val = p.snap[cost.key];
                             return (
-                              <div key={i} className={`${styles.contribCell} ${val > 0 ? b.cellClass : styles.contribCellZero}`}>
+                              <div key={i} className={`${styles.contribCell} ${val > 0 ? cost.cellClass : styles.contribCellZero}`}>
                                 {val > 0 ? `-$${val.toLocaleString()}` : "—"}
                               </div>
                             );
@@ -696,7 +773,7 @@ export default function FireScenarios() {
         </div>
 
         <div className={styles.footer}>
-          {growthRate}% nominal return · $1,800/mo childcare/kid · Not financial advice
+          $1,800/mo childcare/kid · Not financial advice
         </div>
       </div>
     </div>

@@ -1,40 +1,59 @@
 import { describe, it, expect } from "vitest";
-import { getBase } from "./getBase";
-import { BASE_DEFAULT, BASE_DEFAULT_TOTAL } from "../constants";
+import { getMonthlyCosts } from "./getMonthlyCosts";
+import { CHILDCARE_PER_KID } from "../constants";
+import type { CostConfig } from "../types";
 
-describe("getBase", () => {
-  it("returns all zeros for zero assets", () => {
-    const result = getBase(0);
-    expect(result.yourRoth).toBe(0);
-    expect(result.wifeTraditional).toBe(0);
-    expect(result.taxable).toBe(0);
-    expect(result.company).toBe(0);
-    expect(result.metals).toBe(0);
-    expect(result.sgov).toBe(0);
+const noHouseNoKids: CostConfig = {
+  hasHouse: false,
+  numKids: 0,
+  houseBuyAge: 28,
+  kid1BirthAge: 29,
+  kid2BirthAge: 31,
+  mortgagePremium: 1500,
+  rentAmount: 1500,
+};
+
+describe("getMonthlyCosts — no house, no kids", () => {
+  it("returns all zeros for no house no kids", () => {
+    const costs = getMonthlyCosts(30, noHouseNoKids);
+    expect(costs.houseSave).toBe(0);
+    expect(costs.mortgage).toBe(0);
+    expect(costs.childcare).toBe(0);
+    expect(costs.total).toBe(0);
+  });
+});
+
+describe("getMonthlyCosts — house", () => {
+  const config: CostConfig = { ...noHouseNoKids, hasHouse: true, kid1BirthAge: 30, kid2BirthAge: 32 };
+
+  it("house save before purchase", () => {
+    const costs = getMonthlyCosts(26, config);
+    expect(costs.houseSave).toBe(3000);
+    expect(costs.mortgage).toBe(0);
   });
 
-  it("returns BASE_DEFAULT values when totalAssets equals BASE_DEFAULT_TOTAL", () => {
-    const result = getBase(BASE_DEFAULT_TOTAL);
-    expect(result.yourRoth).toBe(BASE_DEFAULT.yourRoth);
-    expect(result.taxable).toBe(BASE_DEFAULT.taxable);
-    expect(result.company).toBe(BASE_DEFAULT.company);
-    expect(result.metals).toBe(BASE_DEFAULT.metals);
-    expect(result.sgov).toBe(BASE_DEFAULT.sgov);
+  it("mortgage after purchase", () => {
+    const costs = getMonthlyCosts(29, config);
+    expect(costs.mortgage).toBe(1500);
+    expect(costs.houseSave).toBe(0);
   });
 
-  it("scales proportionally for double the assets", () => {
-    const result = getBase(BASE_DEFAULT_TOTAL * 2);
-    expect(result.yourRoth).toBe(BASE_DEFAULT.yourRoth * 2);
-    expect(result.taxable).toBe(BASE_DEFAULT.taxable * 2);
-    expect(result.sgov).toBe(BASE_DEFAULT.sgov * 2);
+  it("total equals sum of parts", () => {
+    const costs = getMonthlyCosts(29, config);
+    expect(costs.total).toBe(costs.houseSave + costs.mortgage + costs.childcare);
+  });
+});
+
+describe("getMonthlyCosts — kids", () => {
+  const config: CostConfig = { ...noHouseNoKids, numKids: 1, kid1BirthAge: 29 };
+
+  it("childcare cost during early years", () => {
+    const costs = getMonthlyCosts(31, config); // kid age 2
+    expect(costs.childcare).toBe(CHILDCARE_PER_KID);
   });
 
-  it("preserves allocation ratios for large asset amounts", () => {
-    const totalAssets = 500000;
-    const result = getBase(totalAssets);
-    const scale = totalAssets / BASE_DEFAULT_TOTAL;
-    expect(result.yourRoth).toBe(Math.round(BASE_DEFAULT.yourRoth * scale));
-    expect(result.taxable).toBe(Math.round(BASE_DEFAULT.taxable * scale));
-    expect(result.sgov).toBe(Math.round(BASE_DEFAULT.sgov * scale));
+  it("no childcare after kid turns 18", () => {
+    const costs = getMonthlyCosts(48, config); // kid age 19
+    expect(costs.childcare).toBe(0);
   });
 });

@@ -1,28 +1,9 @@
-export interface Portfolio {
-  yourRoth: number;
-  wifeTraditional: number;
-  taxable: number;
-  company: number;
-  metals: number;
-  sgov: number;
-}
-
-export interface MonthlyContrib {
-  roth: number;
-  wifeTrad: number;
-  taxable: number;
-  metals: number;
-}
-
-export interface InvestableConfig {
-  hasHouse: boolean;
-  numKids: number;
-  houseBuyAge: number;
-  kid1BirthAge: number;
-  kid2BirthAge: number;
-  mortgagePremium: number;
-  postCoastInvest: number;
-  rentAmount: number;
+export interface Bucket {
+  id: string;
+  label: string;
+  balance: number;
+  monthlyContrib: number;
+  annualReturn: number; // percent, e.g. 7 for 7%
 }
 
 export interface DataPoint {
@@ -33,15 +14,22 @@ export interface DataPoint {
   phase: 0 | 1 | 2;
 }
 
+export interface CostConfig {
+  hasHouse: boolean;
+  numKids: number;
+  houseBuyAge: number;
+  kid1BirthAge: number;
+  kid2BirthAge: number;
+  mortgagePremium: number;
+  rentAmount: number;
+}
+
 export interface PhaseSnap {
-  monthlyRoth: number;
-  monthlyWifeTrad: number;
-  monthlyTaxable: number;
-  monthlyMetals: number;
+  bucketContribs: { id: string; label: string; amount: number }[];
+  totalInvested: number;
   monthlyHouseSave: number;
   monthlyMortgage: number;
   monthlyChildcare: number;
-  totalInvested: number;
   totalOut: number;
 }
 
@@ -60,15 +48,14 @@ export interface ScenarioDef {
 }
 
 export interface ScenarioParams extends ScenarioDef {
+  buckets: Bucket[];
   currentAge?: number;
   mortgagePremium?: number;
   postCoastInvest?: number;
   rentAmount?: number;
   retireAge?: number;
-  growthRate?: number;
   inflationRate?: number;
   withdrawalRate?: number;
-  base: Portfolio;
 }
 
 export interface ScenarioResult {
