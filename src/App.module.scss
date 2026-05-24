@@ -140,6 +140,12 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 
   @media (max-width: 760px) {
     grid-template-columns: 1fr 1fr;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
   }
 }
 
@@ -155,6 +161,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   }
 
   @media (max-width: 760px) {
+    padding: 20px 16px 24px;
     border-right: none;
     border-bottom: 1px solid var(--border);
 

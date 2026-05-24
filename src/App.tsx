@@ -230,12 +230,6 @@ export default function FireScenarios() {
                 />
               </div>
             </div>
-            <div className={styles.derivedRow}>
-              <span className={styles.derivedLabel}>premium over rent</span>
-              <span className={`${styles.derivedAmount}${mortgagePremium > 0 ? ` ${styles.derivedAmountPositive}` : ""}`}>
-                +${mortgagePremium.toLocaleString()}/mo
-              </span>
-            </div>
           </div>
 
           {/* Goals */}
