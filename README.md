@@ -53,4 +53,13 @@ Apply the manifests:
 kubectl apply -f k8s/deployment.yaml
 ```
 
-Ingress serves at `retirement-calculator.kubecluster` (adjust the hostname in `k8s/deployment.yaml` to match your cluster).
+Before applying, set the Cloudflare Tunnel token in `k8s/deployment.yaml` under `retirement-calculator-secret` (or patch it after):
+
+```bash
+kubectl create secret generic retirement-calculator-secret \
+  --namespace retirement-calculator \
+  --from-literal=cloudflare-tunnel-token=<your-token> \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Ingress serves at `retirement-calculator.kubecluster` (adjust the hostname in `k8s/deployment.yaml` to match your cluster). The `cloudflared` deployment (2 replicas) exposes the app publicly via Cloudflare Tunnel.
