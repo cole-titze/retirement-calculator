@@ -37,7 +37,7 @@ export default function FireScenarios() {
   const [hoveredScenario, setHoveredScenario] = useState<string | null>(null);
   const [contribScenario, setContribScenario] = useState(SCENARIO_DEFS[0].label);
   const [theme, setTheme] = useState<Theme>(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches ? "midnight" : "paper"
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "slate" : "paper"
   );
 
   useEffect(() => {
