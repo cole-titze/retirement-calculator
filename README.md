@@ -27,6 +27,22 @@ docker build -t retirement-calculator .
 docker run -p 8080:80 retirement-calculator
 ```
 
+## Cloudflare Tunnel
+
+To expose the app publicly via [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/):
+
+1. Create a tunnel in the Cloudflare dashboard and configure it to route traffic to `http://frontend:80`
+2. Copy `docker-compose.prod.yml` and create a `.env` file with your tunnel token:
+   ```
+   CLOUDFLARE_TUNNEL_TOKEN=your-tunnel-token
+   ```
+3. Start with the tunnel profile:
+   ```bash
+   docker compose --profile tunnel up -d
+   ```
+
+If no token is set, the `cloudflared` container simply won't start.
+
 ## Kubernetes
 
 Push to `main` — GitHub Actions builds a multi-arch image and pushes to `ghcr.io/cole-titze/retirement-calculator:latest`.
