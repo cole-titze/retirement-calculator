@@ -112,8 +112,6 @@ export default function FireScenarios() {
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
   }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate]);
 
-  const [retireTaxRate, setRetireTaxRate] = useState(22);
-  const [retireTaxRaw, setRetireTaxRaw] = useState("22");
   const [childcareCost, setChildcareCost] = useState(1800);
   const [childcareCostRaw, setChildcareCostRaw] = useState("1800");
 
@@ -353,29 +351,6 @@ export default function FireScenarios() {
                 <span className={styles.inputPrefix}>%</span>
               </div>
               <div className={styles.inputHint}>FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)</div>
-            </div>
-            <div className={styles.inputGroup}>
-              <div className={styles.inputLabel}>Retire Tax Rate</div>
-              <div className={styles.inputRow}>
-                <input
-                  type="number"
-                  value={retireTaxRaw}
-                  onChange={e => {
-                    setRetireTaxRaw(e.target.value);
-                    const v = Number(e.target.value);
-                    if (v >= 0 && v <= 50) setRetireTaxRate(v);
-                  }}
-                  onBlur={e => {
-                    const v = Math.min(50, Math.max(0, Number(e.target.value) || 0));
-                    setRetireTaxRate(v);
-                    setRetireTaxRaw(String(v));
-                  }}
-                  onFocus={e => e.target.select()}
-                  className={`${styles.input} ${styles.inputSm}`}
-                />
-                <span className={styles.inputPrefix}>%</span>
-              </div>
-              <div className={styles.inputHint}>applied to PRE-TAX withdrawals</div>
             </div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Childcare / Kid / mo</div>
