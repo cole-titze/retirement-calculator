@@ -13,6 +13,8 @@ const noHouseNoKids: CostConfig = {
   rentAmount: 1500,
   childcareCost: 1800,
   kidCostSchool: 1100,
+  houseSavings: 3000,
+  propTaxIns: 600,
 };
 
 describe("getMonthlyCosts — no house, no kids", () => {

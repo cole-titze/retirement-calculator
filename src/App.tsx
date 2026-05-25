@@ -118,6 +118,14 @@ export default function FireScenarios() {
   const [childcareCostRaw, setChildcareCostRaw] = useState("1800");
   const [kidCostSchool, setKidCostSchool] = useState(1100);
   const [kidCostSchoolRaw, setKidCostSchoolRaw] = useState("1100");
+  const [retireSpend, setRetireSpend] = useState(100000);
+  const [retireSpendRaw, setRetireSpendRaw] = useState("100000");
+  const [collegeCost, setCollegeCost] = useState(25000);
+  const [collegeCostRaw, setCollegeCostRaw] = useState("25000");
+  const [houseSavings, setHouseSavings] = useState(3000);
+  const [houseSavingsRaw, setHouseSavingsRaw] = useState("3000");
+  const [propTaxIns, setPropTaxIns] = useState(600);
+  const [propTaxInsRaw, setPropTaxInsRaw] = useState("600");
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;
@@ -131,7 +139,7 @@ export default function FireScenarios() {
     : (buckets[0]?.annualReturn ?? 7);
 
   const activeData: ScenarioResult[] = SCENARIO_DEFS.map((d, i) =>
-    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, childcareCost, kidCostSchool, retireTaxRate })
+    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, childcareCost, kidCostSchool, retireTaxRate, collegeCostPerKid: collegeCost, houseSavings, propTaxIns, retireSpend })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
@@ -262,6 +270,52 @@ export default function FireScenarios() {
                 />
               </div>
             </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>House Savings / mo</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={houseSavingsRaw}
+                  onChange={e => {
+                    setHouseSavingsRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setHouseSavings(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setHouseSavings(v);
+                    setHouseSavingsRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>monthly saving before purchase</div>
+            </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Prop Tax + Ins / mo</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={propTaxInsRaw}
+                  onChange={e => {
+                    setPropTaxInsRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setPropTaxIns(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setPropTaxIns(v);
+                    setPropTaxInsRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>after mortgage paid off</div>
+            </div>
           </div>
 
           {/* Goals */}
@@ -355,7 +409,30 @@ export default function FireScenarios() {
                 />
                 <span className={styles.inputPrefix}>%</span>
               </div>
-              <div className={styles.inputHint}>FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)</div>
+              <div className={styles.inputHint}>FIRE = ${Math.round(retireSpend / withdrawalRateDecimal / 1000)}k (today)</div>
+            </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Retire Spend / yr</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={retireSpendRaw}
+                  onChange={e => {
+                    setRetireSpendRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setRetireSpend(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setRetireSpend(v);
+                    setRetireSpendRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>annual spending in retirement</div>
             </div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Trad. Tax Rate</div>
@@ -425,6 +502,29 @@ export default function FireScenarios() {
                 />
               </div>
               <div className={styles.inputHint}>ages 6–17 per kid</div>
+            </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>College / Kid</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={collegeCostRaw}
+                  onChange={e => {
+                    setCollegeCostRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setCollegeCost(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setCollegeCost(v);
+                    setCollegeCostRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>one-time at age 18</div>
             </div>
           </div>
 

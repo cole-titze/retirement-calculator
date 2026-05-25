@@ -1,4 +1,3 @@
-import { PROP_TAX_INS } from "../constants";
 import type { CostConfig } from "../types";
 
 export interface MonthlyCosts {
@@ -9,20 +8,20 @@ export interface MonthlyCosts {
 }
 
 export function getMonthlyCosts(age: number, config: CostConfig): MonthlyCosts {
-  const { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool } = config;
+  const { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool, houseSavings, propTaxIns } = config;
 
   let houseSave = 0;
   let mortgage = 0;
   let childcare = 0;
 
   if (hasHouse && age < houseBuyAge) {
-    houseSave = 3000;
+    houseSave = houseSavings;
   } else if (hasHouse) {
     const mortgagePaidOff = houseBuyAge + 30;
     if (age < mortgagePaidOff) {
       mortgage = mortgagePremium;
     } else {
-      mortgage = Math.max(0, PROP_TAX_INS - rentAmount);
+      mortgage = Math.max(0, propTaxIns - rentAmount);
     }
   }
 

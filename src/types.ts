@@ -25,6 +25,8 @@ export interface CostConfig {
   rentAmount: number;
   childcareCost: number;
   kidCostSchool: number;
+  houseSavings: number;
+  propTaxIns: number;
 }
 
 export interface PhaseSnap {
@@ -62,6 +64,9 @@ export interface ScenarioParams extends ScenarioDef {
   childcareCost?: number;
   kidCostSchool?: number;
   retireTaxRate?: number;
+  collegeCostPerKid?: number;
+  houseSavings?: number;
+  propTaxIns?: number;
 }
 
 export interface ScenarioResult {

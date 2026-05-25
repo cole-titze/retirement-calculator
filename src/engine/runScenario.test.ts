@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { runScenario } from "./runScenario";
+import { getMonthlyCosts } from "./getMonthlyCosts";
 import { SCENARIO_DEFS } from "../scenarios";
-import type { Bucket } from "../types";
+import type { Bucket, CostConfig } from "../types";
 
 const DEFAULT_BUCKETS: Bucket[] = [
   { id: "roth",   label: "Roth 401k", balance: 0, monthlyContrib: 1958, annualReturn: 7, taxType: "roth"    },
@@ -248,6 +249,55 @@ describe("runScenario — tax type", () => {
   });
 });
 
+describe("runScenario — collegeCostPerKid", () => {
+  // House+1Kid: kid1BirthAge=30, college deduction hits at parent age 48
+  const collegeAge = 48;
+  const buckets = [{ id: "a", label: "A", balance: 500000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const }];
+  const params = { ...baseParams, inflationRate: 0, buckets };
+
+  it("higher college cost produces lower total after kid turns 18", () => {
+    const free = runScenario({ ...SCENARIO_DEFS[2], ...params, collegeCostPerKid: 0 });
+    const paid = runScenario({ ...SCENARIO_DEFS[2], ...params, collegeCostPerKid: 50000 });
+    expect(free.data.find(d => d.age === collegeAge + 1)!.total).toBeGreaterThan(
+      paid.data.find(d => d.age === collegeAge + 1)!.total
+    );
+  });
+
+  it("zero college cost: total unchanged across kid's 18th year at 0% growth", () => {
+    const result = runScenario({ ...SCENARIO_DEFS[2], ...params, collegeCostPerKid: 0 });
+    const before = result.data.find(d => d.age === collegeAge - 1)!;
+    const after  = result.data.find(d => d.age === collegeAge + 1)!;
+    expect(after.total).toBe(before.total);
+  });
+
+  it("college cost does not affect no-kids scenario", () => {
+    const noKids = runScenario({ ...SCENARIO_DEFS[0], ...params, collegeCostPerKid: 50000 });
+    const before = noKids.data.find(d => d.age === collegeAge - 1)!;
+    const after  = noKids.data.find(d => d.age === collegeAge + 1)!;
+    expect(after.total).toBe(before.total);
+  });
+});
+
+describe("runScenario — retireSpend", () => {
+  const buckets = [{ id: "a", label: "A", balance: 2000000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const }];
+  const params = { ...baseParams, inflationRate: 0, buckets };
+
+  it("higher retireSpend depletes portfolio faster in bridge phase", () => {
+    const low  = runScenario({ ...SCENARIO_DEFS[0], ...params, retireSpend: 40000 });
+    const high = runScenario({ ...SCENARIO_DEFS[0], ...params, retireSpend: 150000 });
+    expect(low.data.find(d => d.age === baseParams.retireAge + 5)!.total).toBeGreaterThan(
+      high.data.find(d => d.age === baseParams.retireAge + 5)!.total
+    );
+  });
+
+  it("retireSpend 0 keeps portfolio flat at 0% growth in bridge phase", () => {
+    const result = runScenario({ ...SCENARIO_DEFS[0], ...params, retireSpend: 0 });
+    const atRetire = result.data.find(d => d.age === baseParams.retireAge)!;
+    const atBridge = result.data.find(d => d.age === baseParams.retireAge + 5)!;
+    expect(atBridge.total).toBe(atRetire.total);
+  });
+});
+
 describe("runScenario — postCoastInvest", () => {
   it("postCoastInvest > 0 produces higher total at retirement than full coast", () => {
     const fullCoast = runScenario({
@@ -263,5 +313,87 @@ describe("runScenario — postCoastInvest", () => {
     const retire0 = fullCoast.data.find(d => d.age === baseParams.retireAge)!;
     const retire500 = partialCoast.data.find(d => d.age === baseParams.retireAge)!;
     expect(retire500.total).toBeGreaterThanOrEqual(retire0.total);
+  });
+});
+
+describe("runScenario — user-configurable cost inputs", () => {
+  it("college cost scales portfolio impact: higher cost → lower total year after kid turns 18", () => {
+    // hasHouse: true → kid1BirthAge = 30, college at age 48, check age 49
+    const noCost = runScenario({
+      ...SCENARIO_DEFS[2], ...baseParams, // House + 1 Kid
+      buckets: LARGE_BUCKETS,
+      collegeCostPerKid: 0,
+    });
+    const highCost = runScenario({
+      ...SCENARIO_DEFS[2], ...baseParams,
+      buckets: LARGE_BUCKETS,
+      collegeCostPerKid: 50000,
+    });
+    const noCostAt49   = noCost.data.find(d => d.age === 49)!;
+    const highCostAt49 = highCost.data.find(d => d.age === 49)!;
+    expect(noCostAt49.total).toBeGreaterThan(highCostAt49.total);
+  });
+
+  it("retireSpend drives bridge depletion: higher spend → lower total at retireAge + 3", () => {
+    // 0% growth, no contributions, 0 inflation so math is exact
+    const flatBuckets: Bucket[] = [
+      { id: "a", label: "A", balance: 2000000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" },
+    ];
+    const lowSpend = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: flatBuckets,
+      inflationRate: 0,
+      retireSpend: 50000,
+    });
+    const highSpend = runScenario({
+      ...SCENARIO_DEFS[0], ...baseParams,
+      buckets: flatBuckets,
+      inflationRate: 0,
+      retireSpend: 200000,
+    });
+    const checkAge = baseParams.retireAge + 3;
+    const lowAt  = lowSpend.data.find(d => d.age === checkAge)!;
+    const highAt = highSpend.data.find(d => d.age === checkAge)!;
+    expect(lowAt.total).toBeGreaterThan(highAt.total);
+  });
+
+  it("houseSavings appears as cost pre-purchase: getMonthlyCosts returns custom houseSave", () => {
+    const houseBuyAge = 28;
+    const config: CostConfig = {
+      hasHouse: true,
+      numKids: 0,
+      houseBuyAge,
+      kid1BirthAge: 30,
+      kid2BirthAge: 32,
+      mortgagePremium: 1500,
+      rentAmount: 1500,
+      childcareCost: 1800,
+      kidCostSchool: 1100,
+      houseSavings: 4000,
+      propTaxIns: 600,
+    };
+    // Age 26 is before houseBuyAge (28), so houseSave should be the custom value
+    const costs = getMonthlyCosts(26, config);
+    expect(costs.houseSave).toBe(4000);
+  });
+
+  it("propTaxIns appears after mortgage payoff: getMonthlyCosts returns propTaxIns as mortgage", () => {
+    const houseBuyAge = 28;
+    const config: CostConfig = {
+      hasHouse: true,
+      numKids: 0,
+      houseBuyAge,
+      kid1BirthAge: 30,
+      kid2BirthAge: 32,
+      mortgagePremium: 1500,
+      rentAmount: 0,
+      childcareCost: 1800,
+      kidCostSchool: 1100,
+      houseSavings: 3000,
+      propTaxIns: 800,
+    };
+    // Mortgage paid off at houseBuyAge + 30 = 58; check age 59 (> 58)
+    const costs = getMonthlyCosts(houseBuyAge + 31, config);
+    expect(costs.mortgage).toBe(800);
   });
 });

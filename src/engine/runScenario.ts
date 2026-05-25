@@ -1,4 +1,3 @@
-import { COLLEGE_PER_KID } from "../constants";
 import type { ScenarioParams, ScenarioResult } from "../types";
 import { buildPhaseContribs } from "./buildPhaseContribs";
 import { getMonthlyCosts } from "./getMonthlyCosts";
@@ -32,12 +31,15 @@ export function runScenario({
   childcareCost = 1800,
   kidCostSchool = 1100,
   retireTaxRate = 0,
+  collegeCostPerKid = 25000,
+  houseSavings = 3000,
+  propTaxIns = 600,
 }: ScenarioParams): ScenarioResult {
   const houseBuyAge = 28;
   const kid1BirthAge = hasHouse ? 30 : 29;
   const kid2BirthAge = kid1BirthAge + 2;
 
-  const config = { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool };
+  const config = { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool, houseSavings, propTaxIns };
 
   // Real growth rate per bucket (clamped to ≥ 0)
   const realRates = buckets.map(b => Math.max(0, b.annualReturn / 100 - inflationRate));
@@ -69,8 +71,8 @@ export function runScenario({
         for (let i = 0; i < balances.length; i++) balances[i] *= monthlyGrowths[i];
 
         if (mo === 0) {
-          if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
-          if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
+          if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
+          if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
         }
 
         const yearsLeft = Math.max(0, retireAge - fracAge);
@@ -127,8 +129,8 @@ export function runScenario({
         for (let i = 0; i < balances.length; i++) balances[i] += annualContribs[i];
       }
 
-      if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
-      if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, COLLEGE_PER_KID);
+      if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
+      if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
     }
 
     if (isBridge) applyLifeCosts(balances, retireSpend);
