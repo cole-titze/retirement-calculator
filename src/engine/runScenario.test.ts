@@ -250,10 +250,12 @@ describe("runScenario — tax type", () => {
 });
 
 describe("runScenario — collegeCostPerKid", () => {
-  // House+1Kid: kid1BirthAge=30, college deduction hits at parent age 48
+  // House+1Kid: kid1BirthAge=30, college deduction hits at parent age 48.
+  // Zero out all recurring costs so the only variable is the college lump sum.
   const collegeAge = 48;
-  const buckets = [{ id: "a", label: "A", balance: 500000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const }];
-  const params = { ...baseParams, inflationRate: 0, buckets };
+  const noRecurringCosts = { mortgagePremium: 0, rentAmount: 0, childcareCost: 0, kidCostSchool: 0 };
+  const buckets = [{ id: "a", label: "A", balance: 2000000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const }];
+  const params = { ...baseParams, inflationRate: 0, buckets, ...noRecurringCosts };
 
   it("higher college cost produces lower total after kid turns 18", () => {
     const free = runScenario({ ...SCENARIO_DEFS[2], ...params, collegeCostPerKid: 0 });
