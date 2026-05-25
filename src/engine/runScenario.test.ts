@@ -205,6 +205,49 @@ describe("runScenario — bridge and retirement spending", () => {
   });
 });
 
+describe("runScenario — tax type", () => {
+  // Use 0% growth, 0 contributions, 0 spending so balance is stable and math is exact.
+  const scenario = { ...SCENARIO_DEFS[0], retireSpend: 0 };
+  const params = { currentAge: 30, retireAge: 50, inflationRate: 0, withdrawalRate: 0.04, mortgagePremium: 0, rentAmount: 0 };
+  const makeBucket = (taxType: "roth" | "traditional" | "taxable") =>
+    ({ id: "a", label: "A", balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType });
+
+  it("Roth bucket: tax rate has no effect on displayed total", () => {
+    const b = makeBucket("roth");
+    const r0  = runScenario({ ...scenario, ...params, buckets: [b], retireTaxRate: 0 });
+    const r22 = runScenario({ ...scenario, ...params, buckets: [b], retireTaxRate: 22 });
+    expect(r0.data.find(d => d.age === 30)!.total).toBe(r22.data.find(d => d.age === 30)!.total);
+  });
+
+  it("Taxable bucket: tax rate has no effect on displayed total", () => {
+    const b = makeBucket("taxable");
+    const r0  = runScenario({ ...scenario, ...params, buckets: [b], retireTaxRate: 0 });
+    const r22 = runScenario({ ...scenario, ...params, buckets: [b], retireTaxRate: 22 });
+    expect(r0.data.find(d => d.age === 30)!.total).toBe(r22.data.find(d => d.age === 30)!.total);
+  });
+
+  it("Traditional bucket: total is reduced by tax rate", () => {
+    const r = runScenario({ ...scenario, ...params, buckets: [makeBucket("traditional")], retireTaxRate: 20 });
+    // 100k * (1 - 0.20) / 1000 = 80
+    expect(r.data.find(d => d.age === 30)!.total).toBe(80);
+  });
+
+  it("Traditional at 0% tax shows full balance", () => {
+    const r = runScenario({ ...scenario, ...params, buckets: [makeBucket("traditional")], retireTaxRate: 0 });
+    expect(r.data.find(d => d.age === 30)!.total).toBe(100);
+  });
+
+  it("mixed Roth + Traditional: only traditional portion is discounted", () => {
+    const buckets = [
+      { id: "r", label: "Roth", balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType: "roth" as const },
+      { id: "t", label: "Trad", balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType: "traditional" as const },
+    ];
+    const r = runScenario({ ...scenario, ...params, buckets, retireTaxRate: 25 });
+    // Roth: 100k, Trad: 100k * 0.75 = 75k → total = 175k → 175
+    expect(r.data.find(d => d.age === 30)!.total).toBe(175);
+  });
+});
+
 describe("runScenario — postCoastInvest", () => {
   it("postCoastInvest > 0 produces higher total at retirement than full coast", () => {
     const fullCoast = runScenario({
