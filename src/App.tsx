@@ -13,7 +13,9 @@ import styles from "./App.module.scss";
 type Theme = "paper" | "midnight" | "slate";
 
 function getQSP(name: string, fallback: number, min: number, max: number): number {
-  const v = Number(new URLSearchParams(window.location.search).get(name));
+  const raw = new URLSearchParams(window.location.search).get(name);
+  if (raw === null) return fallback;
+  const v = Number(raw);
   return Number.isFinite(v) && v >= min && v <= max ? v : fallback;
 }
 
@@ -214,9 +216,9 @@ export default function FireScenarios() {
         {/* Inputs Panel */}
         <div className={styles.inputsPanel}>
 
-          {/* You */}
+          {/* Housing */}
           <div className={styles.inputSection}>
-            <div className={styles.inputSectionLabel}>You</div>
+            <div className={styles.inputSectionLabel}>Housing</div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Current Age</div>
               <input
@@ -237,11 +239,6 @@ export default function FireScenarios() {
                 className={`${styles.input} ${styles.inputMd}`}
               />
             </div>
-          </div>
-
-          {/* Housing */}
-          <div className={styles.inputSection}>
-            <div className={styles.inputSectionLabel}>Housing</div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Current Rent / mo</div>
               <div className={styles.inputRow}>
