@@ -49,7 +49,6 @@ export function runScenario({
       amounts[i] -= deduct;
       remaining -= deduct;
     }
-    // If costs exceed all contributions, deduct the excess from balances separately
     return amounts;
   }
 

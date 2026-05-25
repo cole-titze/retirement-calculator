@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer, ReferenceLine, ReferenceArea,
 } from "recharts";
 import { runScenario } from "./engine/runScenario";
 import { SCENARIO_DEFS } from "./scenarios";
@@ -29,10 +29,10 @@ const THEME_SCENARIO_COLORS: Record<Theme, [string, string, string, string]> = {
   slate:    ["#3dbd7a", "#68acf0", "#e0b050", "#e06565"],
 };
 
-const THEME_CHART: Record<Theme, { grid: string; axis: string; tick: string; retireRef: string; rothRef: string }> = {
-  paper:    { grid: "#eae7e1", axis: "#e0dcd4", tick: "#b0aba4", retireRef: "#a09b95", rothRef: "#a09b95" },
-  midnight: { grid: "#302c3e", axis: "#2a2636", tick: "#7a7570", retireRef: "#8a8790", rothRef: "#8a8790" },
-  slate:    { grid: "#2d3a52", axis: "#263344", tick: "#6a7890", retireRef: "#7888a0", rothRef: "#7888a0" },
+const THEME_CHART: Record<Theme, { grid: string; axis: string; tick: string; retireRef: string; rothRef: string; honey: string; sage: string }> = {
+  paper:    { grid: "#eae7e1", axis: "#e0dcd4", tick: "#b0aba4", retireRef: "#a09b95", rothRef: "#a09b95", honey: "#9a6820", sage: "#2e7d52" },
+  midnight: { grid: "#302c3e", axis: "#2a2636", tick: "#7a7570", retireRef: "#8a8790", rothRef: "#8a8790", honey: "#d49540", sage: "#4dbf7c" },
+  slate:    { grid: "#2d3a52", axis: "#263344", tick: "#6a7890", retireRef: "#7888a0", rothRef: "#7888a0", honey: "#e0b050", sage: "#3dbd7a" },
 };
 
 const BUCKET_DOT_CLASSES = [
@@ -111,6 +111,11 @@ export default function FireScenarios() {
     const qs = p.toString();
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
   }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate]);
+
+  const [retireTaxRate, setRetireTaxRate] = useState(22);
+  const [retireTaxRaw, setRetireTaxRaw] = useState("22");
+  const [childcareCost, setChildcareCost] = useState(1800);
+  const [childcareCostRaw, setChildcareCostRaw] = useState("1800");
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;
@@ -217,6 +222,7 @@ export default function FireScenarios() {
                   setCurrentAge(v);
                   setCurrentAgeRaw(String(v));
                 }}
+                onFocus={e => e.target.select()}
                 className={`${styles.input} ${styles.inputMd}`}
               />
             </div>
@@ -234,6 +240,7 @@ export default function FireScenarios() {
                   defaultValue={rent}
                   onChange={e => { const v = Number(e.target.value); if (v >= 0) setRent(v); }}
                   onBlur={e => setRent(Math.max(0, Number(e.target.value) || 0))}
+                  onFocus={e => e.target.select()}
                   className={`${styles.input} ${styles.inputLg}`}
                 />
               </div>
@@ -247,6 +254,7 @@ export default function FireScenarios() {
                   defaultValue={mortgage}
                   onChange={e => { const v = Number(e.target.value); if (v >= 0) setMortgage(v); }}
                   onBlur={e => setMortgage(Math.max(0, Number(e.target.value) || 0))}
+                  onFocus={e => e.target.select()}
                   className={`${styles.input} ${styles.inputLg}`}
                 />
               </div>
@@ -272,6 +280,7 @@ export default function FireScenarios() {
                   setRetireAge(v);
                   setRetireAgeRaw(String(v));
                 }}
+                onFocus={e => e.target.select()}
                 className={`${styles.input} ${styles.inputMd}`}
               />
               <div className={styles.inputHint}>bridge to Roth ends at 59½</div>
@@ -287,6 +296,7 @@ export default function FireScenarios() {
                     setPostCoastRaw(e.target.value);
                     setPostCoastInvest(Number(e.target.value) || 0);
                   }}
+                  onFocus={e => e.target.select()}
                   placeholder="0"
                   className={`${styles.input} ${styles.inputLg}`}
                 />
@@ -314,6 +324,7 @@ export default function FireScenarios() {
                     setInflation(v);
                     setInflationRaw(String(v));
                   }}
+                  onFocus={e => e.target.select()}
                   className={`${styles.input} ${styles.inputSm}`}
                 />
                 <span className={styles.inputPrefix}>%</span>
@@ -336,11 +347,58 @@ export default function FireScenarios() {
                     setWithdrawalRate(v);
                     setWithdrawalRaw(String(v));
                   }}
+                  onFocus={e => e.target.select()}
                   className={`${styles.input} ${styles.inputSm}`}
                 />
                 <span className={styles.inputPrefix}>%</span>
               </div>
               <div className={styles.inputHint}>FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)</div>
+            </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Retire Tax Rate</div>
+              <div className={styles.inputRow}>
+                <input
+                  type="number"
+                  value={retireTaxRaw}
+                  onChange={e => {
+                    setRetireTaxRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0 && v <= 50) setRetireTaxRate(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.min(50, Math.max(0, Number(e.target.value) || 0));
+                    setRetireTaxRate(v);
+                    setRetireTaxRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputSm}`}
+                />
+                <span className={styles.inputPrefix}>%</span>
+              </div>
+              <div className={styles.inputHint}>applied to PRE-TAX withdrawals</div>
+            </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Childcare / Kid / mo</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={childcareCostRaw}
+                  onChange={e => {
+                    setChildcareCostRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setChildcareCost(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setChildcareCost(v);
+                    setChildcareCostRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>ages 0–5; school-age $1,100</div>
             </div>
           </div>
 
@@ -450,11 +508,6 @@ export default function FireScenarios() {
 
         {/* Main Chart */}
         <div className={styles.chartWrapper}>
-          <div className={styles.chartBgOverlay}>
-            <div className={styles.chartBgAccum} />
-            <div className={styles.chartBgBridge} />
-            <div className={styles.chartBgRetire} />
-          </div>
           <ResponsiveContainer width="100%" height={420}>
             <LineChart data={mergedData} margin={{ top: 10, right: isMobile ? 8 : 24, left: isMobile ? 0 : 8, bottom: 10 }}>
               <CartesianGrid strokeDasharray="1 3" stroke={chart.grid} />
@@ -473,6 +526,8 @@ export default function FireScenarios() {
                 width={isMobile ? 46 : 70}
               />
               <Tooltip content={<CustomTooltip />} />
+              <ReferenceArea x1={retireAge} x2={60} fill={chart.honey} fillOpacity={0.07} />
+              <ReferenceArea x1={60} x2={70} fill={chart.sage} fillOpacity={0.06} />
               <ReferenceLine x={retireAge} stroke={chart.retireRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: `Retire ${retireAge} →`, fill: chart.retireRef, fontSize: 9, position: "insideTopLeft" }} />
               <ReferenceLine x={60} stroke={chart.rothRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: "Roth 59½ →", fill: chart.rothRef, fontSize: 9, position: "insideTopLeft" }} />
               {activeData.map(s => {
@@ -773,7 +828,7 @@ export default function FireScenarios() {
         </div>
 
         <div className={styles.footer}>
-          $1,800/mo childcare/kid · Not financial advice
+          7% growth · 10% down · $450k home · ${childcareCost.toLocaleString()}/mo childcare/kid · Not financial advice
         </div>
       </div>
     </div>

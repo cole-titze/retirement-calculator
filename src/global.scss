@@ -8,6 +8,10 @@
   padding: 0;
 }
 
+html, body {
+  background: var(--bg);
+}
+
 // ─── Paper (warm light) ───────────────────────────────────────────
 :root {
   --bg:           #f8f6f1;

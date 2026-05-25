@@ -22,6 +22,7 @@ export interface CostConfig {
   kid2BirthAge: number;
   mortgagePremium: number;
   rentAmount: number;
+  childcareCost: number;
 }
 
 export interface PhaseSnap {
