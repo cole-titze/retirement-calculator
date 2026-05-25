@@ -139,7 +139,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 // ─── Inputs Panel ─────────────────────────────────────────────────
 .inputsPanel {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   margin-bottom: 40px;
   background: var(--bg-card);
   border: 1px solid var(--border);

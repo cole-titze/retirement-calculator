@@ -122,6 +122,20 @@ export default function FireScenarios() {
   const [withdrawalRaw, setWithdrawalRaw] = useState(() => String(getQSP('withdrawal', 4, 1, 10)));
 
   const [buckets, setBuckets] = useState<Bucket[]>(() => getBucketsQSP(DEFAULT_BUCKETS));
+  const [retireTaxRate, setRetireTaxRate] = useState(() => getQSP('taxRate', 22, 0, 50));
+  const [retireTaxRaw, setRetireTaxRaw] = useState(() => String(getQSP('taxRate', 22, 0, 50)));
+  const [childcareCost, setChildcareCost] = useState(() => getQSP('childcare', 1800, 0, 10000));
+  const [childcareCostRaw, setChildcareCostRaw] = useState(() => String(getQSP('childcare', 1800, 0, 10000)));
+  const [kidCostSchool, setKidCostSchool] = useState(() => getQSP('school', 1100, 0, 10000));
+  const [kidCostSchoolRaw, setKidCostSchoolRaw] = useState(() => String(getQSP('school', 1100, 0, 10000)));
+  const [retireSpend, setRetireSpend] = useState(() => getQSP('retireSpend', 100000, 0, 1000000));
+  const [retireSpendRaw, setRetireSpendRaw] = useState(() => String(getQSP('retireSpend', 100000, 0, 1000000)));
+  const [collegeCost, setCollegeCost] = useState(() => getQSP('college', 25000, 0, 500000));
+  const [collegeCostRaw, setCollegeCostRaw] = useState(() => String(getQSP('college', 25000, 0, 500000)));
+  const [houseSavings, setHouseSavings] = useState(() => getQSP('houseSave', 3000, 0, 100000));
+  const [houseSavingsRaw, setHouseSavingsRaw] = useState(() => String(getQSP('houseSave', 3000, 0, 100000)));
+  const [propTaxIns, setPropTaxIns] = useState(() => getQSP('propTax', 600, 0, 100000));
+  const [propTaxInsRaw, setPropTaxInsRaw] = useState(() => String(getQSP('propTax', 600, 0, 100000)));
 
   useEffect(() => {
     const p = new URLSearchParams();
@@ -143,21 +157,6 @@ export default function FireScenarios() {
     const qs = p.toString();
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
   }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate, retireTaxRate, childcareCost, kidCostSchool, retireSpend, collegeCost, houseSavings, propTaxIns, buckets]);
-
-  const [retireTaxRate, setRetireTaxRate] = useState(() => getQSP('taxRate', 22, 0, 50));
-  const [retireTaxRaw, setRetireTaxRaw] = useState(() => String(getQSP('taxRate', 22, 0, 50)));
-  const [childcareCost, setChildcareCost] = useState(() => getQSP('childcare', 1800, 0, 10000));
-  const [childcareCostRaw, setChildcareCostRaw] = useState(() => String(getQSP('childcare', 1800, 0, 10000)));
-  const [kidCostSchool, setKidCostSchool] = useState(() => getQSP('school', 1100, 0, 10000));
-  const [kidCostSchoolRaw, setKidCostSchoolRaw] = useState(() => String(getQSP('school', 1100, 0, 10000)));
-  const [retireSpend, setRetireSpend] = useState(() => getQSP('retireSpend', 100000, 0, 1000000));
-  const [retireSpendRaw, setRetireSpendRaw] = useState(() => String(getQSP('retireSpend', 100000, 0, 1000000)));
-  const [collegeCost, setCollegeCost] = useState(() => getQSP('college', 25000, 0, 500000));
-  const [collegeCostRaw, setCollegeCostRaw] = useState(() => String(getQSP('college', 25000, 0, 500000)));
-  const [houseSavings, setHouseSavings] = useState(() => getQSP('houseSave', 3000, 0, 100000));
-  const [houseSavingsRaw, setHouseSavingsRaw] = useState(() => String(getQSP('houseSave', 3000, 0, 100000)));
-  const [propTaxIns, setPropTaxIns] = useState(() => getQSP('propTax', 600, 0, 100000));
-  const [propTaxInsRaw, setPropTaxInsRaw] = useState(() => String(getQSP('propTax', 600, 0, 100000)));
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;
@@ -410,6 +409,29 @@ export default function FireScenarios() {
               </div>
               <div className={styles.inputHint}>annual spending in retirement</div>
             </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>College / Kid</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={collegeCostRaw}
+                  onChange={e => {
+                    setCollegeCostRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setCollegeCost(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setCollegeCost(v);
+                    setCollegeCostRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>one-time at age 18</div>
+            </div>
           </div>
 
           {/* Assumptions */}
@@ -529,29 +551,6 @@ export default function FireScenarios() {
                 />
               </div>
               <div className={styles.inputHint}>ages 6–17 per kid</div>
-            </div>
-            <div className={styles.inputGroup}>
-              <div className={styles.inputLabel}>College / Kid</div>
-              <div className={styles.inputRow}>
-                <span className={styles.inputPrefix}>$</span>
-                <input
-                  type="number"
-                  value={collegeCostRaw}
-                  onChange={e => {
-                    setCollegeCostRaw(e.target.value);
-                    const v = Number(e.target.value);
-                    if (v >= 0) setCollegeCost(v);
-                  }}
-                  onBlur={e => {
-                    const v = Math.max(0, Number(e.target.value) || 0);
-                    setCollegeCost(v);
-                    setCollegeCostRaw(String(v));
-                  }}
-                  onFocus={e => e.target.select()}
-                  className={`${styles.input} ${styles.inputLg}`}
-                />
-              </div>
-              <div className={styles.inputHint}>one-time at age 18</div>
             </div>
           </div>
 

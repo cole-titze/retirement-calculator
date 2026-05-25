@@ -124,11 +124,11 @@ describe("runScenario — multi-bucket return rates", () => {
   it("higher return bucket accumulates more than lower return bucket", () => {
     const lowReturn = runScenario({
       ...SCENARIO_DEFS[0], ...baseParams,
-      buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 2 }],
+      buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 2, taxType: "taxable" as const }],
     });
     const highReturn = runScenario({
       ...SCENARIO_DEFS[0], ...baseParams,
-      buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 10 }],
+      buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 10, taxType: "taxable" as const }],
     });
     const retireLow  = lowReturn.data.find(d => d.age === baseParams.retireAge)!;
     const retireHigh = highReturn.data.find(d => d.age === baseParams.retireAge)!;
@@ -139,14 +139,14 @@ describe("runScenario — multi-bucket return rates", () => {
     // Single bucket at 7%
     const single = runScenario({
       ...SCENARIO_DEFS[0], ...baseParams,
-      buckets: [{ id: "a", label: "A", balance: 0, monthlyContrib: 1000, annualReturn: 7 }],
+      buckets: [{ id: "a", label: "A", balance: 0, monthlyContrib: 1000, annualReturn: 7, taxType: "taxable" as const }],
     });
     // Two buckets at 7% each — should produce the same total
     const dual = runScenario({
       ...SCENARIO_DEFS[0], ...baseParams,
       buckets: [
-        { id: "a", label: "A", balance: 0, monthlyContrib: 600, annualReturn: 7 },
-        { id: "b", label: "B", balance: 0, monthlyContrib: 400, annualReturn: 7 },
+        { id: "a", label: "A", balance: 0, monthlyContrib: 600, annualReturn: 7, taxType: "taxable" as const },
+        { id: "b", label: "B", balance: 0, monthlyContrib: 400, annualReturn: 7, taxType: "taxable" as const },
       ],
     });
     const singleRetire = single.data.find(d => d.age === baseParams.retireAge)!;
@@ -181,7 +181,7 @@ describe("runScenario — bridge and retirement spending", () => {
   it("portfolio decreases during bridge phase", () => {
     const result = runScenario({
       ...SCENARIO_DEFS[0], ...baseParams,
-      buckets: [{ id: "a", label: "A", balance: 500000, monthlyContrib: 0, annualReturn: 0 }],
+      buckets: [{ id: "a", label: "A", balance: 500000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const }],
       inflationRate: 0,
     });
     const atRetire = result.data.find(d => d.age === baseParams.retireAge)!;
@@ -192,7 +192,7 @@ describe("runScenario — bridge and retirement spending", () => {
   it("portfolio stays non-negative throughout when started with modest assets", () => {
     const result = runScenario({
       ...SCENARIO_DEFS[0], ...baseParams,
-      buckets: [{ id: "a", label: "A", balance: 100000, monthlyContrib: 0, annualReturn: 7 }],
+      buckets: [{ id: "a", label: "A", balance: 100000, monthlyContrib: 0, annualReturn: 7, taxType: "taxable" as const }],
     });
     result.data.forEach(d => expect(d.total).toBeGreaterThanOrEqual(0));
   });
@@ -200,7 +200,7 @@ describe("runScenario — bridge and retirement spending", () => {
   it("coast is not found when assets are insufficient", () => {
     const result = runScenario({
       ...SCENARIO_DEFS[0], ...baseParams,
-      buckets: [{ id: "a", label: "A", balance: 0, monthlyContrib: 0, annualReturn: 0 }],
+      buckets: [{ id: "a", label: "A", balance: 0, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const }],
     });
     expect(result.coastFireAge).toBeNull();
   });
@@ -210,7 +210,7 @@ describe("runScenario — tax type", () => {
   // Use 0% growth, 0 contributions, 0 spending so balance is stable and math is exact.
   const scenario = { ...SCENARIO_DEFS[0], retireSpend: 0 };
   const params = { currentAge: 30, retireAge: 50, inflationRate: 0, withdrawalRate: 0.04, mortgagePremium: 0, rentAmount: 0 };
-  const makeBucket = (taxType: "roth" | "traditional" | "taxable") =>
+  const makeBucket = (taxType: "roth" | "taxable") =>
     ({ id: "a", label: "A", balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType });
 
   it("Roth bucket: tax rate has no effect on displayed total", () => {
@@ -220,31 +220,24 @@ describe("runScenario — tax type", () => {
     expect(r0.data.find(d => d.age === 30)!.total).toBe(r22.data.find(d => d.age === 30)!.total);
   });
 
-  it("Taxable bucket: tax rate has no effect on displayed total", () => {
-    const b = makeBucket("taxable");
-    const r0  = runScenario({ ...scenario, ...params, buckets: [b], retireTaxRate: 0 });
-    const r22 = runScenario({ ...scenario, ...params, buckets: [b], retireTaxRate: 22 });
-    expect(r0.data.find(d => d.age === 30)!.total).toBe(r22.data.find(d => d.age === 30)!.total);
-  });
-
-  it("Traditional bucket: total is reduced by tax rate", () => {
-    const r = runScenario({ ...scenario, ...params, buckets: [makeBucket("traditional")], retireTaxRate: 20 });
+  it("Taxable bucket: total is reduced by tax rate", () => {
+    const r = runScenario({ ...scenario, ...params, buckets: [makeBucket("taxable")], retireTaxRate: 20 });
     // 100k * (1 - 0.20) / 1000 = 80
     expect(r.data.find(d => d.age === 30)!.total).toBe(80);
   });
 
-  it("Traditional at 0% tax shows full balance", () => {
-    const r = runScenario({ ...scenario, ...params, buckets: [makeBucket("traditional")], retireTaxRate: 0 });
+  it("Taxable at 0% tax shows full balance", () => {
+    const r = runScenario({ ...scenario, ...params, buckets: [makeBucket("taxable")], retireTaxRate: 0 });
     expect(r.data.find(d => d.age === 30)!.total).toBe(100);
   });
 
-  it("mixed Roth + Traditional: only traditional portion is discounted", () => {
+  it("mixed Roth + Taxable: only taxable portion is discounted", () => {
     const buckets = [
-      { id: "r", label: "Roth", balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType: "roth" as const },
-      { id: "t", label: "Trad", balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType: "traditional" as const },
+      { id: "r", label: "Roth",    balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType: "roth"    as const },
+      { id: "t", label: "Taxable", balance: 100000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const },
     ];
     const r = runScenario({ ...scenario, ...params, buckets, retireTaxRate: 25 });
-    // Roth: 100k, Trad: 100k * 0.75 = 75k → total = 175k → 175
+    // Roth: 100k, Taxable: 100k * 0.75 = 75k → total = 175k → 175
     expect(r.data.find(d => d.age === 30)!.total).toBe(175);
   });
 });
