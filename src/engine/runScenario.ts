@@ -30,6 +30,7 @@ export function runScenario({
   inflationRate = 0,
   withdrawalRate = 0.04,
   childcareCost = 1800,
+  retireTaxRate = 0,
 }: ScenarioParams): ScenarioResult {
   const houseBuyAge = 28;
   const kid1BirthAge = hasHouse ? 30 : 29;
@@ -140,7 +141,9 @@ export function runScenario({
       }
     }
 
-    const liquidTotal = balances.reduce((s, b) => s + b, 0);
+    const taxMultiplier = (i: number) =>
+      buckets[i].taxType === "traditional" ? 1 - retireTaxRate / 100 : 1;
+    const liquidTotal = balances.reduce((s, b, i) => s + b * taxMultiplier(i), 0);
     data.push({
       age,
       total: Math.round(liquidTotal / 1000),

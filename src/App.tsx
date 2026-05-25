@@ -56,10 +56,10 @@ const BUCKET_CELL_CLASSES = [
 const THEME_BG: Record<Theme, string> = { paper: "#f8f6f1", midnight: "#17151c", slate: "#1b2130" };
 
 const DEFAULT_BUCKETS: Bucket[] = [
-  { id: "roth",      label: "Roth 401k",     balance: 0, monthlyContrib: 1958, annualReturn: 7   },
-  { id: "market",    label: "Market",         balance: 0, monthlyContrib: 0,    annualReturn: 7   },
-  { id: "metals",    label: "Metals",         balance: 0, monthlyContrib: 0,    annualReturn: 5   },
-  { id: "emergency", label: "Emergency Fund", balance: 0, monthlyContrib: 0,    annualReturn: 4.5 },
+  { id: "roth",      label: "Roth 401k",     balance: 0, monthlyContrib: 1958, annualReturn: 7,   taxType: "roth"     },
+  { id: "market",    label: "Market",         balance: 0, monthlyContrib: 0,    annualReturn: 7,   taxType: "taxable"  },
+  { id: "metals",    label: "Metals",         balance: 0, monthlyContrib: 0,    annualReturn: 5,   taxType: "taxable"  },
+  { id: "emergency", label: "Emergency Fund", balance: 0, monthlyContrib: 0,    annualReturn: 4.5, taxType: "taxable"  },
 ];
 
 export default function FireScenarios() {
@@ -112,6 +112,8 @@ export default function FireScenarios() {
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
   }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate]);
 
+  const [retireTaxRate, setRetireTaxRate] = useState(22);
+  const [retireTaxRaw, setRetireTaxRaw] = useState("22");
   const [childcareCost, setChildcareCost] = useState(1800);
   const [childcareCostRaw, setChildcareCostRaw] = useState("1800");
 
@@ -127,7 +129,7 @@ export default function FireScenarios() {
     : (buckets[0]?.annualReturn ?? 7);
 
   const activeData: ScenarioResult[] = SCENARIO_DEFS.map((d, i) =>
-    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, childcareCost })
+    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, childcareCost, retireTaxRate })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
@@ -157,6 +159,7 @@ export default function FireScenarios() {
       balance: 0,
       monthlyContrib: 0,
       annualReturn: 7,
+      taxType: "taxable" as const,
     }]);
 
   const atRetire = (s: ScenarioResult) => s.data.find(d => d.age === retireAge);
@@ -353,6 +356,29 @@ export default function FireScenarios() {
               <div className={styles.inputHint}>FIRE = ${Math.round(100000 / withdrawalRateDecimal / 1000)}k (today)</div>
             </div>
             <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Trad. Tax Rate</div>
+              <div className={styles.inputRow}>
+                <input
+                  type="number"
+                  value={retireTaxRaw}
+                  onChange={e => {
+                    setRetireTaxRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0 && v <= 50) setRetireTaxRate(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.min(50, Math.max(0, Number(e.target.value) || 0));
+                    setRetireTaxRate(v);
+                    setRetireTaxRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputSm}`}
+                />
+                <span className={styles.inputPrefix}>%</span>
+              </div>
+              <div className={styles.inputHint}>applied to Traditional accounts</div>
+            </div>
+            <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Childcare / Kid / mo</div>
               <div className={styles.inputRow}>
                 <span className={styles.inputPrefix}>$</span>
@@ -401,6 +427,17 @@ export default function FireScenarios() {
                     onChange={e => updateBucket(bucket.id, { label: e.target.value })}
                     className={styles.bucketLabelInput}
                   />
+                  <div className={styles.bucketTaxPills}>
+                    {(["roth", "traditional", "taxable"] as const).map(t => (
+                      <button
+                        key={t}
+                        className={`${styles.bucketTaxPill} ${bucket.taxType === t ? styles.bucketTaxPillActive : ""}`}
+                        onClick={() => updateBucket(bucket.id, { taxType: t })}
+                      >
+                        {t === "roth" ? "Roth" : t === "traditional" ? "Trad" : "Taxable"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className={styles.bucketNumGroup}>
                   <div className={styles.bucketField}>

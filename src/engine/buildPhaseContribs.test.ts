@@ -4,7 +4,7 @@ import { CHILDCARE_PER_KID } from "../constants";
 import type { Bucket, CostConfig } from "../types";
 
 const bucket = (overrides: Partial<Bucket> = {}): Bucket => ({
-  id: "roth", label: "Roth", balance: 0, monthlyContrib: 2000, annualReturn: 7,
+  id: "roth", label: "Roth", balance: 0, monthlyContrib: 2000, annualReturn: 7, taxType: "roth" as const,
   ...overrides,
 });
 

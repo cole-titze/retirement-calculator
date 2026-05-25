@@ -4,6 +4,7 @@ export interface Bucket {
   balance: number;
   monthlyContrib: number;
   annualReturn: number; // percent, e.g. 7 for 7%
+  taxType: "roth" | "traditional" | "taxable";
 }
 
 export interface DataPoint {
@@ -58,6 +59,7 @@ export interface ScenarioParams extends ScenarioDef {
   inflationRate?: number;
   withdrawalRate?: number;
   childcareCost?: number;
+  retireTaxRate?: number;
 }
 
 export interface ScenarioResult {

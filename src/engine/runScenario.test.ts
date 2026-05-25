@@ -4,13 +4,13 @@ import { SCENARIO_DEFS } from "../scenarios";
 import type { Bucket } from "../types";
 
 const DEFAULT_BUCKETS: Bucket[] = [
-  { id: "roth",   label: "Roth 401k", balance: 0, monthlyContrib: 1958, annualReturn: 7 },
-  { id: "market", label: "Market",    balance: 0, monthlyContrib: 0,    annualReturn: 7 },
+  { id: "roth",   label: "Roth 401k", balance: 0, monthlyContrib: 1958, annualReturn: 7, taxType: "roth"    },
+  { id: "market", label: "Market",    balance: 0, monthlyContrib: 0,    annualReturn: 7, taxType: "taxable" },
 ];
 
 const LARGE_BUCKETS: Bucket[] = [
-  { id: "roth",   label: "Roth 401k", balance: 1000000, monthlyContrib: 1958, annualReturn: 7 },
-  { id: "market", label: "Market",    balance: 0,       monthlyContrib: 0,    annualReturn: 7 },
+  { id: "roth",   label: "Roth 401k", balance: 1000000, monthlyContrib: 1958, annualReturn: 7, taxType: "roth"    },
+  { id: "market", label: "Market",    balance: 0,       monthlyContrib: 0,    annualReturn: 7, taxType: "taxable" },
 ];
 
 const baseParams = {
