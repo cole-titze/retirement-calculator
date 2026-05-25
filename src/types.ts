@@ -4,7 +4,7 @@ export interface Bucket {
   balance: number;
   monthlyContrib: number;
   annualReturn: number; // percent, e.g. 7 for 7%
-  taxType: "roth" | "traditional" | "taxable";
+  taxType: "roth" | "taxable";
 }
 
 export interface DataPoint {

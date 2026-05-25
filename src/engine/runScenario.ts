@@ -145,7 +145,7 @@ export function runScenario({
     }
 
     const taxMultiplier = (i: number) =>
-      buckets[i].taxType === "traditional" ? 1 - retireTaxRate / 100 : 1;
+      buckets[i].taxType === "taxable" ? 1 - retireTaxRate / 100 : 1;
     const liquidTotal = balances.reduce((s, b, i) => s + b * taxMultiplier(i), 0);
     data.push({
       age,

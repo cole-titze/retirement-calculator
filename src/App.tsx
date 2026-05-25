@@ -19,6 +19,28 @@ function getQSP(name: string, fallback: number, min: number, max: number): numbe
   return Number.isFinite(v) && v >= min && v <= max ? v : fallback;
 }
 
+function getBucketsQSP(fallback: Bucket[]): Bucket[] {
+  const raw = new URLSearchParams(window.location.search).get('buckets');
+  if (raw === null) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return fallback;
+    return parsed.map((b: unknown) => {
+      const o = b as Record<string, unknown>;
+      return {
+        id: String(o.id ?? `b${Math.random()}`),
+        label: String(o.label ?? "Bucket"),
+        balance: Math.max(0, Number(o.balance) || 0),
+        monthlyContrib: Math.max(0, Number(o.monthlyContrib) || 0),
+        annualReturn: Math.min(50, Math.max(0, Number(o.annualReturn) || 7)),
+        taxType: (o.taxType === "roth" ? "roth" : "taxable") as "roth" | "taxable",
+      };
+    });
+  } catch {
+    return fallback;
+  }
+}
+
 const THEMES: { id: Theme; label: string }[] = [
   { id: "paper",    label: "Paper"    },
   { id: "midnight", label: "Midnight" },
@@ -99,35 +121,43 @@ export default function FireScenarios() {
   const [withdrawalRate, setWithdrawalRate] = useState(() => getQSP('withdrawal', 4, 1, 10));
   const [withdrawalRaw, setWithdrawalRaw] = useState(() => String(getQSP('withdrawal', 4, 1, 10)));
 
-  const [buckets, setBuckets] = useState<Bucket[]>(DEFAULT_BUCKETS);
+  const [buckets, setBuckets] = useState<Bucket[]>(() => getBucketsQSP(DEFAULT_BUCKETS));
 
   useEffect(() => {
     const p = new URLSearchParams();
-    if (currentAge !== 30)      p.set('age',       String(currentAge));
-    if (rent !== 1500)          p.set('rent',      String(rent));
-    if (mortgage !== 3000)      p.set('mortgage',  String(mortgage));
-    if (postCoastInvest !== 0)  p.set('postCoast', String(postCoastInvest));
-    if (retireAge !== 50)       p.set('retireAge', String(retireAge));
-    if (inflation !== 4)        p.set('inflation', String(inflation));
-    if (withdrawalRate !== 4)   p.set('withdrawal',String(withdrawalRate));
+    if (currentAge !== 30)        p.set('age',         String(currentAge));
+    if (rent !== 1500)            p.set('rent',        String(rent));
+    if (mortgage !== 3000)        p.set('mortgage',    String(mortgage));
+    if (postCoastInvest !== 0)    p.set('postCoast',   String(postCoastInvest));
+    if (retireAge !== 50)         p.set('retireAge',   String(retireAge));
+    if (inflation !== 4)          p.set('inflation',   String(inflation));
+    if (withdrawalRate !== 4)     p.set('withdrawal',  String(withdrawalRate));
+    if (retireTaxRate !== 22)     p.set('taxRate',     String(retireTaxRate));
+    if (childcareCost !== 1800)   p.set('childcare',   String(childcareCost));
+    if (kidCostSchool !== 1100)   p.set('school',      String(kidCostSchool));
+    if (retireSpend !== 100000)   p.set('retireSpend', String(retireSpend));
+    if (collegeCost !== 25000)    p.set('college',     String(collegeCost));
+    if (houseSavings !== 3000)    p.set('houseSave',   String(houseSavings));
+    if (propTaxIns !== 600)       p.set('propTax',     String(propTaxIns));
+    if (JSON.stringify(buckets) !== JSON.stringify(DEFAULT_BUCKETS)) p.set('buckets', JSON.stringify(buckets));
     const qs = p.toString();
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
-  }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate]);
+  }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate, retireTaxRate, childcareCost, kidCostSchool, retireSpend, collegeCost, houseSavings, propTaxIns, buckets]);
 
-  const [retireTaxRate, setRetireTaxRate] = useState(22);
-  const [retireTaxRaw, setRetireTaxRaw] = useState("22");
-  const [childcareCost, setChildcareCost] = useState(1800);
-  const [childcareCostRaw, setChildcareCostRaw] = useState("1800");
-  const [kidCostSchool, setKidCostSchool] = useState(1100);
-  const [kidCostSchoolRaw, setKidCostSchoolRaw] = useState("1100");
-  const [retireSpend, setRetireSpend] = useState(100000);
-  const [retireSpendRaw, setRetireSpendRaw] = useState("100000");
-  const [collegeCost, setCollegeCost] = useState(25000);
-  const [collegeCostRaw, setCollegeCostRaw] = useState("25000");
-  const [houseSavings, setHouseSavings] = useState(3000);
-  const [houseSavingsRaw, setHouseSavingsRaw] = useState("3000");
-  const [propTaxIns, setPropTaxIns] = useState(600);
-  const [propTaxInsRaw, setPropTaxInsRaw] = useState("600");
+  const [retireTaxRate, setRetireTaxRate] = useState(() => getQSP('taxRate', 22, 0, 50));
+  const [retireTaxRaw, setRetireTaxRaw] = useState(() => String(getQSP('taxRate', 22, 0, 50)));
+  const [childcareCost, setChildcareCost] = useState(() => getQSP('childcare', 1800, 0, 10000));
+  const [childcareCostRaw, setChildcareCostRaw] = useState(() => String(getQSP('childcare', 1800, 0, 10000)));
+  const [kidCostSchool, setKidCostSchool] = useState(() => getQSP('school', 1100, 0, 10000));
+  const [kidCostSchoolRaw, setKidCostSchoolRaw] = useState(() => String(getQSP('school', 1100, 0, 10000)));
+  const [retireSpend, setRetireSpend] = useState(() => getQSP('retireSpend', 100000, 0, 1000000));
+  const [retireSpendRaw, setRetireSpendRaw] = useState(() => String(getQSP('retireSpend', 100000, 0, 1000000)));
+  const [collegeCost, setCollegeCost] = useState(() => getQSP('college', 25000, 0, 500000));
+  const [collegeCostRaw, setCollegeCostRaw] = useState(() => String(getQSP('college', 25000, 0, 500000)));
+  const [houseSavings, setHouseSavings] = useState(() => getQSP('houseSave', 3000, 0, 100000));
+  const [houseSavingsRaw, setHouseSavingsRaw] = useState(() => String(getQSP('houseSave', 3000, 0, 100000)));
+  const [propTaxIns, setPropTaxIns] = useState(() => getQSP('propTax', 600, 0, 100000));
+  const [propTaxInsRaw, setPropTaxInsRaw] = useState(() => String(getQSP('propTax', 600, 0, 100000)));
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;
@@ -357,6 +387,29 @@ export default function FireScenarios() {
               </div>
               <div className={styles.inputHint}>0 = full coast</div>
             </div>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputLabel}>Retire Spend / yr</div>
+              <div className={styles.inputRow}>
+                <span className={styles.inputPrefix}>$</span>
+                <input
+                  type="number"
+                  value={retireSpendRaw}
+                  onChange={e => {
+                    setRetireSpendRaw(e.target.value);
+                    const v = Number(e.target.value);
+                    if (v >= 0) setRetireSpend(v);
+                  }}
+                  onBlur={e => {
+                    const v = Math.max(0, Number(e.target.value) || 0);
+                    setRetireSpend(v);
+                    setRetireSpendRaw(String(v));
+                  }}
+                  onFocus={e => e.target.select()}
+                  className={`${styles.input} ${styles.inputLg}`}
+                />
+              </div>
+              <div className={styles.inputHint}>annual spending in retirement</div>
+            </div>
           </div>
 
           {/* Assumptions */}
@@ -407,29 +460,6 @@ export default function FireScenarios() {
                 <span className={styles.inputPrefix}>%</span>
               </div>
               <div className={styles.inputHint}>FIRE = ${Math.round(retireSpend / withdrawalRateDecimal / 1000)}k (today)</div>
-            </div>
-            <div className={styles.inputGroup}>
-              <div className={styles.inputLabel}>Retire Spend / yr</div>
-              <div className={styles.inputRow}>
-                <span className={styles.inputPrefix}>$</span>
-                <input
-                  type="number"
-                  value={retireSpendRaw}
-                  onChange={e => {
-                    setRetireSpendRaw(e.target.value);
-                    const v = Number(e.target.value);
-                    if (v >= 0) setRetireSpend(v);
-                  }}
-                  onBlur={e => {
-                    const v = Math.max(0, Number(e.target.value) || 0);
-                    setRetireSpend(v);
-                    setRetireSpendRaw(String(v));
-                  }}
-                  onFocus={e => e.target.select()}
-                  className={`${styles.input} ${styles.inputLg}`}
-                />
-              </div>
-              <div className={styles.inputHint}>annual spending in retirement</div>
             </div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Trad. Tax Rate</div>
@@ -550,13 +580,13 @@ export default function FireScenarios() {
                     className={styles.bucketLabelInput}
                   />
                   <div className={styles.bucketTaxPills}>
-                    {(["roth", "traditional", "taxable"] as const).map(t => (
+                    {(["roth", "taxable"] as const).map(t => (
                       <button
                         key={t}
                         className={`${styles.bucketTaxPill} ${bucket.taxType === t ? styles.bucketTaxPillActive : ""}`}
                         onClick={() => updateBucket(bucket.id, { taxType: t })}
                       >
-                        {t === "roth" ? "Roth" : t === "traditional" ? "Trad" : "Taxable"}
+                        {t === "roth" ? "Roth" : "Taxable"}
                       </button>
                     ))}
                   </div>
