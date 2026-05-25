@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getMonthlyCosts } from "./getMonthlyCosts";
-import { CHILDCARE_PER_KID, KID_COST_SCHOOL } from "../constants";
+import { CHILDCARE_PER_KID } from "../constants";
 import type { CostConfig } from "../types";
 
 const baseConfig: CostConfig = {
@@ -12,6 +12,7 @@ const baseConfig: CostConfig = {
   mortgagePremium: 1500,
   rentAmount: 1500,
   childcareCost: 1800,
+  kidCostSchool: 1100,
 };
 
 describe("getMonthlyCosts — no house, no kids", () => {
@@ -50,7 +51,7 @@ describe("getMonthlyCosts — kids costs", () => {
 
   it("school cost during ages 6–17 of kid", () => {
     const result = getMonthlyCosts(36, config); // kid age 7
-    expect(result.childcare).toBe(KID_COST_SCHOOL);
+    expect(result.childcare).toBe(1100);
   });
 
   it("no kid deduction once kid is 18+", () => {
