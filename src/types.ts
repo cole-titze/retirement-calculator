@@ -57,6 +57,7 @@ export interface ScenarioParams extends ScenarioDef {
   retireAge?: number;
   inflationRate?: number;
   withdrawalRate?: number;
+  childcareCost?: number;
 }
 
 export interface ScenarioResult {

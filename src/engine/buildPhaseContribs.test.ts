@@ -10,7 +10,7 @@ const bucket = (overrides: Partial<Bucket> = {}): Bucket => ({
 
 const makeConfig = (overrides: Partial<CostConfig> = {}): CostConfig => ({
   hasHouse: false, numKids: 0, houseBuyAge: 28,
-  kid1BirthAge: 29, kid2BirthAge: 31, mortgagePremium: 1500, rentAmount: 1500,
+  kid1BirthAge: 29, kid2BirthAge: 31, mortgagePremium: 1500, rentAmount: 1500, childcareCost: 1800,
   ...overrides,
 });
 

@@ -127,7 +127,7 @@ export default function FireScenarios() {
     : (buckets[0]?.annualReturn ?? 7);
 
   const activeData: ScenarioResult[] = SCENARIO_DEFS.map((d, i) =>
-    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal })
+    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, childcareCost })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
