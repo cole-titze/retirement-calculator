@@ -92,6 +92,7 @@ const THEME_BG: Record<Theme, string> = { paper: "#f8f6f1", midnight: "#17151c",
 
 const DEFAULT_BUCKETS: Bucket[] = [
   { id: "roth",      label: "Roth 401k",     balance: 0, monthlyContrib: 2041, annualReturn: 7,   taxType: "roth"     },
+  { id: "trad",      label: "Trad 401k",     balance: 0, monthlyContrib: 0,    annualReturn: 7,   taxType: "taxable"  },
   { id: "market",    label: "Market",         balance: 0, monthlyContrib: 0,    annualReturn: 7,   taxType: "taxable"  },
   { id: "metals",    label: "Metals",         balance: 0, monthlyContrib: 0,    annualReturn: 5,   taxType: "taxable"  },
   { id: "emergency", label: "Emergency Fund", balance: 0, monthlyContrib: 0,    annualReturn: 4.5, taxType: "taxable"  },
