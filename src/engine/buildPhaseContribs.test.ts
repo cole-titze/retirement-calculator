@@ -11,7 +11,7 @@ const bucket = (overrides: Partial<Bucket> = {}): Bucket => ({
 const makeConfig = (overrides: Partial<CostConfig> = {}): CostConfig => ({
   hasHouse: false, numKids: 0, houseBuyAge: 28,
   kid1BirthAge: 29, kid2BirthAge: 31, mortgagePremium: 1500, rentAmount: 1500, childcareCost: 1800, kidCostSchool: 1100,
-  houseSavings: 3000, propTaxIns: 600,
+  propTaxIns: 600,
   ...overrides,
 });
 
@@ -77,15 +77,6 @@ describe("buildPhaseContribs — no house, no kids", () => {
 
 describe("buildPhaseContribs — house", () => {
   const config = makeConfig({ hasHouse: true });
-
-  it("includes a house-saving phase before houseBuyAge", () => {
-    const phases = buildPhaseContribs({
-      ...base, hasHouse: true, buckets: [bucket()], config,
-    });
-    const saving = phases.find(p => p.snap.monthlyHouseSave > 0);
-    expect(saving).toBeDefined();
-    expect(saving!.snap.monthlyHouseSave).toBe(3000);
-  });
 
   it("includes a post-purchase phase with mortgage cost", () => {
     const phases = buildPhaseContribs({

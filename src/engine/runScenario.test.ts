@@ -352,26 +352,6 @@ describe("runScenario — user-configurable cost inputs", () => {
     expect(lowAt.total).toBeGreaterThan(highAt.total);
   });
 
-  it("houseSavings appears as cost pre-purchase: getMonthlyCosts returns custom houseSave", () => {
-    const houseBuyAge = 28;
-    const config: CostConfig = {
-      hasHouse: true,
-      numKids: 0,
-      houseBuyAge,
-      kid1BirthAge: 30,
-      kid2BirthAge: 32,
-      mortgagePremium: 1500,
-      rentAmount: 1500,
-      childcareCost: 1800,
-      kidCostSchool: 1100,
-      houseSavings: 4000,
-      propTaxIns: 600,
-    };
-    // Age 26 is before houseBuyAge (28), so houseSave should be the custom value
-    const costs = getMonthlyCosts(26, config);
-    expect(costs.houseSave).toBe(4000);
-  });
-
   it("propTaxIns appears after mortgage payoff: getMonthlyCosts returns propTaxIns as mortgage", () => {
     const houseBuyAge = 28;
     const config: CostConfig = {
@@ -384,7 +364,6 @@ describe("runScenario — user-configurable cost inputs", () => {
       rentAmount: 0,
       childcareCost: 1800,
       kidCostSchool: 1100,
-      houseSavings: 3000,
       propTaxIns: 800,
     };
     // Mortgage paid off at houseBuyAge + 30 = 58; check age 59 (> 58)

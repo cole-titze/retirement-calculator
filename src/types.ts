@@ -25,14 +25,12 @@ export interface CostConfig {
   rentAmount: number;
   childcareCost: number;
   kidCostSchool: number;
-  houseSavings: number;
   propTaxIns: number;
 }
 
 export interface PhaseSnap {
   bucketContribs: { id: string; label: string; amount: number }[];
   totalInvested: number;
-  monthlyHouseSave: number;
   monthlyMortgage: number;
   monthlyChildcare: number;
   totalOut: number;
@@ -65,7 +63,6 @@ export interface ScenarioParams extends ScenarioDef {
   kidCostSchool?: number;
   retireTaxRate?: number;
   collegeCostPerKid?: number;
-  houseSavings?: number;
   propTaxIns?: number;
 }
 

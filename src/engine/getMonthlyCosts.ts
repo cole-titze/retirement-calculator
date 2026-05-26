@@ -1,22 +1,18 @@
 import type { CostConfig } from "../types";
 
 export interface MonthlyCosts {
-  houseSave: number;
   mortgage: number;
   childcare: number;
   total: number;
 }
 
 export function getMonthlyCosts(age: number, config: CostConfig): MonthlyCosts {
-  const { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool, houseSavings, propTaxIns } = config;
+  const { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool, propTaxIns } = config;
 
-  let houseSave = 0;
   let mortgage = 0;
   let childcare = 0;
 
-  if (hasHouse && age < houseBuyAge) {
-    houseSave = houseSavings;
-  } else if (hasHouse) {
+  if (hasHouse && age >= houseBuyAge) {
     const mortgagePaidOff = houseBuyAge + 30;
     if (age < mortgagePaidOff) {
       mortgage = mortgagePremium;
@@ -37,5 +33,5 @@ export function getMonthlyCosts(age: number, config: CostConfig): MonthlyCosts {
     else if (k2Age > 5 && k2Age <= 17) childcare += kidCostSchool;
   }
 
-  return { houseSave, mortgage, childcare, total: houseSave + mortgage + childcare };
+  return { mortgage, childcare, total: mortgage + childcare };
 }

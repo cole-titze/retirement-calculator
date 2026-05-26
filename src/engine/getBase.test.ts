@@ -13,14 +13,12 @@ const noHouseNoKids: CostConfig = {
   rentAmount: 1500,
   childcareCost: 1800,
   kidCostSchool: 1100,
-  houseSavings: 3000,
   propTaxIns: 600,
 };
 
 describe("getMonthlyCosts — no house, no kids", () => {
   it("returns all zeros for no house no kids", () => {
     const costs = getMonthlyCosts(30, noHouseNoKids);
-    expect(costs.houseSave).toBe(0);
     expect(costs.mortgage).toBe(0);
     expect(costs.childcare).toBe(0);
     expect(costs.total).toBe(0);
@@ -30,21 +28,19 @@ describe("getMonthlyCosts — no house, no kids", () => {
 describe("getMonthlyCosts — house", () => {
   const config: CostConfig = { ...noHouseNoKids, hasHouse: true, kid1BirthAge: 30, kid2BirthAge: 32 };
 
-  it("house save before purchase", () => {
+  it("no cost before house purchase", () => {
     const costs = getMonthlyCosts(26, config);
-    expect(costs.houseSave).toBe(3000);
     expect(costs.mortgage).toBe(0);
   });
 
   it("mortgage after purchase", () => {
     const costs = getMonthlyCosts(29, config);
     expect(costs.mortgage).toBe(1500);
-    expect(costs.houseSave).toBe(0);
   });
 
   it("total equals sum of parts", () => {
     const costs = getMonthlyCosts(29, config);
-    expect(costs.total).toBe(costs.houseSave + costs.mortgage + costs.childcare);
+    expect(costs.total).toBe(costs.mortgage + costs.childcare);
   });
 });
 

@@ -32,14 +32,13 @@ export function runScenario({
   kidCostSchool = 1100,
   retireTaxRate = 0,
   collegeCostPerKid = 25000,
-  houseSavings = 3000,
   propTaxIns = 600,
 }: ScenarioParams): ScenarioResult {
   const houseBuyAge = 28;
   const kid1BirthAge = hasHouse ? 30 : 29;
   const kid2BirthAge = kid1BirthAge + 2;
 
-  const config = { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool, houseSavings, propTaxIns };
+  const config = { hasHouse, numKids, houseBuyAge, kid1BirthAge, kid2BirthAge, mortgagePremium, rentAmount, childcareCost, kidCostSchool, propTaxIns };
 
   // Real growth rate per bucket (clamped to ≥ 0)
   const realRates = buckets.map(b => Math.max(0, b.annualReturn / 100 - inflationRate));

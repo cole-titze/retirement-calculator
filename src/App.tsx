@@ -19,21 +19,32 @@ function getQSP(name: string, fallback: number, min: number, max: number): numbe
   return Number.isFinite(v) && v >= min && v <= max ? v : fallback;
 }
 
+// Compact format: array-of-arrays [label, balance, monthlyContrib, annualReturn, "r"|"t"]
+// base64url-encoded so no percent-encoding is needed in the URL.
+function encodeBuckets(buckets: Bucket[]): string {
+  const compact = buckets.map(b => [
+    b.label, b.balance, b.monthlyContrib, b.annualReturn,
+    b.taxType === "roth" ? "r" : "t",
+  ]);
+  return btoa(JSON.stringify(compact)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 function getBucketsQSP(fallback: Bucket[]): Bucket[] {
   const raw = new URLSearchParams(window.location.search).get('buckets');
   if (raw === null) return fallback;
   try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return fallback;
-    return parsed.map((b: unknown) => {
-      const o = b as Record<string, unknown>;
+    const b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+    const arr = JSON.parse(atob(b64)) as unknown[];
+    if (!Array.isArray(arr) || arr.length === 0) return fallback;
+    return arr.map((row, idx) => {
+      const a = row as unknown[];
       return {
-        id: String(o.id ?? `b${Math.random()}`),
-        label: String(o.label ?? "Bucket"),
-        balance: Math.max(0, Number(o.balance) || 0),
-        monthlyContrib: Math.max(0, Number(o.monthlyContrib) || 0),
-        annualReturn: Math.min(50, Math.max(0, Number(o.annualReturn) || 7)),
-        taxType: (o.taxType === "roth" ? "roth" : "taxable") as "roth" | "taxable",
+        id: `b${idx}`,
+        label: String(a[0] ?? "Bucket"),
+        balance: Math.max(0, Number(a[1]) || 0),
+        monthlyContrib: Math.max(0, Number(a[2]) || 0),
+        annualReturn: Math.min(50, Math.max(0, Number(a[3]) || 7)),
+        taxType: (a[4] === "r" ? "roth" : "taxable") as "roth" | "taxable",
       };
     });
   } catch {
@@ -132,8 +143,6 @@ export default function FireScenarios() {
   const [retireSpendRaw, setRetireSpendRaw] = useState(() => String(getQSP('retireSpend', 100000, 0, 1000000)));
   const [collegeCost, setCollegeCost] = useState(() => getQSP('college', 40000, 0, 500000));
   const [collegeCostRaw, setCollegeCostRaw] = useState(() => String(getQSP('college', 40000, 0, 500000)));
-  const [houseSavings, setHouseSavings] = useState(() => getQSP('houseSave', 3000, 0, 100000));
-  const [houseSavingsRaw, setHouseSavingsRaw] = useState(() => String(getQSP('houseSave', 3000, 0, 100000)));
   const [propTaxIns, setPropTaxIns] = useState(() => getQSP('propTax', 600, 0, 100000));
   const [propTaxInsRaw, setPropTaxInsRaw] = useState(() => String(getQSP('propTax', 600, 0, 100000)));
 
@@ -151,12 +160,11 @@ export default function FireScenarios() {
     if (kidCostSchool !== 1100)   p.set('school',      String(kidCostSchool));
     if (retireSpend !== 100000)   p.set('retireSpend', String(retireSpend));
     if (collegeCost !== 40000)    p.set('college',     String(collegeCost));
-    if (houseSavings !== 3000)    p.set('houseSave',   String(houseSavings));
     if (propTaxIns !== 600)       p.set('propTax',     String(propTaxIns));
-    if (JSON.stringify(buckets) !== JSON.stringify(DEFAULT_BUCKETS)) p.set('buckets', JSON.stringify(buckets));
+    if (JSON.stringify(buckets) !== JSON.stringify(DEFAULT_BUCKETS)) p.set('buckets', encodeBuckets(buckets));
     const qs = p.toString();
     window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
-  }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate, retireTaxRate, childcareCost, kidCostSchool, retireSpend, collegeCost, houseSavings, propTaxIns, buckets]);
+  }, [currentAge, rent, mortgage, postCoastInvest, retireAge, inflation, withdrawalRate, retireTaxRate, childcareCost, kidCostSchool, retireSpend, collegeCost, propTaxIns, buckets]);
 
   const mortgagePremium = Math.max(0, mortgage - rent);
   const inflationRate = inflation / 100;
@@ -170,7 +178,7 @@ export default function FireScenarios() {
     : (buckets[0]?.annualReturn ?? 7);
 
   const activeData: ScenarioResult[] = SCENARIO_DEFS.map((d, i) =>
-    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, childcareCost, kidCostSchool, retireTaxRate, collegeCostPerKid: collegeCost, houseSavings, propTaxIns, retireSpend })
+    runScenario({ ...d, color: scenarioColors[i], buckets, currentAge, mortgagePremium, postCoastInvest, rentAmount: rent, retireAge, inflationRate, withdrawalRate: withdrawalRateDecimal, childcareCost, kidCostSchool, retireTaxRate, collegeCostPerKid: collegeCost, propTaxIns, retireSpend })
   );
 
   const mergedData = activeData[0].data.map((_, i) => {
@@ -296,29 +304,6 @@ export default function FireScenarios() {
                   className={`${styles.input} ${styles.inputLg}`}
                 />
               </div>
-            </div>
-            <div className={styles.inputGroup}>
-              <div className={styles.inputLabel}>House Savings / mo</div>
-              <div className={styles.inputRow}>
-                <span className={styles.inputPrefix}>$</span>
-                <input
-                  type="number"
-                  value={houseSavingsRaw}
-                  onChange={e => {
-                    setHouseSavingsRaw(e.target.value);
-                    const v = Number(e.target.value);
-                    if (e.target.value !== '' && v >= 0) setHouseSavings(v);
-                  }}
-                  onBlur={e => {
-                    const v = Math.max(0, Number(e.target.value) || 0);
-                    setHouseSavings(v);
-                    setHouseSavingsRaw(String(v));
-                  }}
-                  onFocus={e => e.target.select()}
-                  className={`${styles.input} ${styles.inputLg}`}
-                />
-              </div>
-              <div className={styles.inputHint}>monthly saving before purchase</div>
             </div>
             <div className={styles.inputGroup}>
               <div className={styles.inputLabel}>Prop Tax + Ins / mo</div>
@@ -825,7 +810,6 @@ export default function FireScenarios() {
             const colTemplate = `160px repeat(${phases.length}, 1fr)`;
             const phaseBuckets = phases[0]?.snap.bucketContribs ?? [];
             const lifeCosts = [
-              { key: "monthlyHouseSave" as const,  label: "House Savings",           dotClass: styles.bucketDotPurple, cellClass: styles.contribCellPurple },
               { key: "monthlyMortgage" as const,   label: "Mortgage",                dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },
               { key: "monthlyChildcare" as const,  label: "Kids (Childcare/School)", dotClass: styles.bucketDotOrange, cellClass: styles.contribCellOrange },
             ] as const;
