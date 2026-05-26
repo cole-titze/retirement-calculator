@@ -919,10 +919,33 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   border: 1px solid var(--border-dim);
   border-radius: 8px;
   padding: 10px 14px;
+  user-select: none;
+
+  input[type="text"] {
+    user-select: text;
+  }
 
   @media (max-width: 600px) {
     flex-wrap: wrap;
     padding: 10px 12px;
+  }
+}
+
+.bucketRowDragOver {
+  border-color: var(--accent, #4dbf7c);
+  background: var(--bg-hover, color-mix(in srgb, var(--bg-input) 85%, var(--accent, #4dbf7c)));
+}
+
+.bucketDragHandle {
+  cursor: grab;
+  color: var(--text-muted, #888);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+
+  &:active {
+    cursor: grabbing;
   }
 }
 

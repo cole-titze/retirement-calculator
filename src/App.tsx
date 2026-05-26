@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, ReferenceArea,
@@ -201,6 +201,21 @@ export default function FireScenarios() {
 
   const deleteBucket = (id: string) =>
     setBuckets(prev => prev.length > 1 ? prev.filter(b => b.id !== id) : prev);
+
+  const draggedBucketId = useRef<string | null>(null);
+  const [dragOverBucketId, setDragOverBucketId] = useState<string | null>(null);
+
+  const reorderBuckets = (fromId: string, toId: string) => {
+    setBuckets(prev => {
+      const from = prev.findIndex(b => b.id === fromId);
+      const to = prev.findIndex(b => b.id === toId);
+      if (from === -1 || to === -1 || from === to) return prev;
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  };
 
   const addBucket = () =>
     setBuckets(prev => [...prev, {
@@ -557,7 +572,19 @@ export default function FireScenarios() {
           </div>
           <div className={styles.bucketList}>
             {buckets.map(bucket => (
-              <div key={bucket.id} className={styles.bucketRow}>
+              <div
+                key={bucket.id}
+                className={`${styles.bucketRow}${dragOverBucketId === bucket.id ? ` ${styles.bucketRowDragOver}` : ''}`}
+                onDragOver={e => { e.preventDefault(); if (draggedBucketId.current !== bucket.id) setDragOverBucketId(bucket.id); }}
+                onDrop={e => { e.preventDefault(); if (draggedBucketId.current && draggedBucketId.current !== bucket.id) reorderBuckets(draggedBucketId.current, bucket.id); setDragOverBucketId(null); }}
+                onDragLeave={() => setDragOverBucketId(null)}
+              >
+                <div
+                  className={styles.bucketDragHandle}
+                  draggable
+                  onDragStart={e => { draggedBucketId.current = bucket.id; e.dataTransfer.effectAllowed = 'move'; }}
+                  onDragEnd={() => { draggedBucketId.current = null; setDragOverBucketId(null); }}
+                >⠿</div>
                 <div className={styles.bucketLabelField}>
                   <div className={styles.bucketFieldLabel}>Name</div>
                   <input
