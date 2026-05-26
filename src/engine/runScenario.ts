@@ -127,10 +127,10 @@ export function runScenario({
 
         for (let i = 0; i < balances.length; i++) balances[i] += annualContribs[i];
       }
-
-      if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
-      if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
     }
+
+    if (numKids >= 1 && age - kid1BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
+    if (numKids >= 2 && age - kid2BirthAge === 18) applyLifeCosts(balances, collegeCostPerKid);
 
     if (isBridge) applyLifeCosts(balances, retireSpend);
 
