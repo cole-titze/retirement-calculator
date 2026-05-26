@@ -217,6 +217,17 @@ export default function FireScenarios() {
     });
   };
 
+  const moveBucketStep = (id: string, dir: -1 | 1) => {
+    setBuckets(prev => {
+      const idx = prev.findIndex(b => b.id === id);
+      const next = idx + dir;
+      if (next < 0 || next >= prev.length) return prev;
+      const arr = [...prev];
+      [arr[idx], arr[next]] = [arr[next], arr[idx]];
+      return arr;
+    });
+  };
+
   const addBucket = () =>
     setBuckets(prev => [...prev, {
       id: `b${Date.now()}`,
@@ -655,6 +666,20 @@ export default function FireScenarios() {
                   </div>
                 </div>
                 <div className={styles.bucketDeleteField}>
+                  <div className={styles.bucketMoveButtons}>
+                    <button
+                      className={styles.bucketMoveBtn}
+                      onClick={() => moveBucketStep(bucket.id, -1)}
+                      disabled={buckets.indexOf(bucket) === 0}
+                      aria-label="Move bucket up"
+                    >▲</button>
+                    <button
+                      className={styles.bucketMoveBtn}
+                      onClick={() => moveBucketStep(bucket.id, 1)}
+                      disabled={buckets.indexOf(bucket) === buckets.length - 1}
+                      aria-label="Move bucket down"
+                    >▼</button>
+                  </div>
                   <button
                     className={styles.bucketDeleteBtn}
                     onClick={() => deleteBucket(bucket.id)}
