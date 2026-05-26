@@ -80,7 +80,7 @@ const BUCKET_CELL_CLASSES = [
 const THEME_BG: Record<Theme, string> = { paper: "#f8f6f1", midnight: "#17151c", slate: "#1b2130" };
 
 const DEFAULT_BUCKETS: Bucket[] = [
-  { id: "roth",      label: "Roth 401k",     balance: 0, monthlyContrib: 1958, annualReturn: 7,   taxType: "roth"     },
+  { id: "roth",      label: "Roth 401k",     balance: 0, monthlyContrib: 2041, annualReturn: 7,   taxType: "roth"     },
   { id: "market",    label: "Market",         balance: 0, monthlyContrib: 0,    annualReturn: 7,   taxType: "taxable"  },
   { id: "metals",    label: "Metals",         balance: 0, monthlyContrib: 0,    annualReturn: 5,   taxType: "taxable"  },
   { id: "emergency", label: "Emergency Fund", balance: 0, monthlyContrib: 0,    annualReturn: 4.5, taxType: "taxable"  },
@@ -130,8 +130,8 @@ export default function FireScenarios() {
   const [kidCostSchoolRaw, setKidCostSchoolRaw] = useState(() => String(getQSP('school', 1100, 0, 10000)));
   const [retireSpend, setRetireSpend] = useState(() => getQSP('retireSpend', 100000, 0, 1000000));
   const [retireSpendRaw, setRetireSpendRaw] = useState(() => String(getQSP('retireSpend', 100000, 0, 1000000)));
-  const [collegeCost, setCollegeCost] = useState(() => getQSP('college', 25000, 0, 500000));
-  const [collegeCostRaw, setCollegeCostRaw] = useState(() => String(getQSP('college', 25000, 0, 500000)));
+  const [collegeCost, setCollegeCost] = useState(() => getQSP('college', 40000, 0, 500000));
+  const [collegeCostRaw, setCollegeCostRaw] = useState(() => String(getQSP('college', 40000, 0, 500000)));
   const [houseSavings, setHouseSavings] = useState(() => getQSP('houseSave', 3000, 0, 100000));
   const [houseSavingsRaw, setHouseSavingsRaw] = useState(() => String(getQSP('houseSave', 3000, 0, 100000)));
   const [propTaxIns, setPropTaxIns] = useState(() => getQSP('propTax', 600, 0, 100000));
@@ -150,7 +150,7 @@ export default function FireScenarios() {
     if (childcareCost !== 1800)   p.set('childcare',   String(childcareCost));
     if (kidCostSchool !== 1100)   p.set('school',      String(kidCostSchool));
     if (retireSpend !== 100000)   p.set('retireSpend', String(retireSpend));
-    if (collegeCost !== 25000)    p.set('college',     String(collegeCost));
+    if (collegeCost !== 40000)    p.set('college',     String(collegeCost));
     if (houseSavings !== 3000)    p.set('houseSave',   String(houseSavings));
     if (propTaxIns !== 600)       p.set('propTax',     String(propTaxIns));
     if (JSON.stringify(buckets) !== JSON.stringify(DEFAULT_BUCKETS)) p.set('buckets', JSON.stringify(buckets));
@@ -242,7 +242,8 @@ export default function FireScenarios() {
           </div>
         </div>
 
-        {/* Inputs Panel */}
+        {/* Inputs + Buckets Card */}
+        <div className={styles.inputsCard}>
         <div className={styles.inputsPanel}>
 
           {/* Housing */}
@@ -306,7 +307,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setHouseSavingsRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0) setHouseSavings(v);
+                    if (e.target.value !== '' && v >= 0) setHouseSavings(v);
                   }}
                   onBlur={e => {
                     const v = Math.max(0, Number(e.target.value) || 0);
@@ -329,7 +330,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setPropTaxInsRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0) setPropTaxIns(v);
+                    if (e.target.value !== '' && v >= 0) setPropTaxIns(v);
                   }}
                   onBlur={e => {
                     const v = Math.max(0, Number(e.target.value) || 0);
@@ -396,7 +397,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setRetireSpendRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0) setRetireSpend(v);
+                    if (e.target.value !== '' && v >= 0) setRetireSpend(v);
                   }}
                   onBlur={e => {
                     const v = Math.max(0, Number(e.target.value) || 0);
@@ -419,7 +420,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setCollegeCostRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0) setCollegeCost(v);
+                    if (e.target.value !== '' && v >= 0) setCollegeCost(v);
                   }}
                   onBlur={e => {
                     const v = Math.max(0, Number(e.target.value) || 0);
@@ -446,7 +447,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setInflationRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0 && v <= 10) setInflation(v);
+                    if (e.target.value !== '' && v >= 0 && v <= 10) setInflation(v);
                   }}
                   onBlur={e => {
                     const v = Math.min(10, Math.max(0, Number(e.target.value) || 0));
@@ -492,7 +493,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setRetireTaxRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0 && v <= 50) setRetireTaxRate(v);
+                    if (e.target.value !== '' && v >= 0 && v <= 50) setRetireTaxRate(v);
                   }}
                   onBlur={e => {
                     const v = Math.min(50, Math.max(0, Number(e.target.value) || 0));
@@ -516,7 +517,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setChildcareCostRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0) setChildcareCost(v);
+                    if (e.target.value !== '' && v >= 0) setChildcareCost(v);
                   }}
                   onBlur={e => {
                     const v = Math.max(0, Number(e.target.value) || 0);
@@ -539,7 +540,7 @@ export default function FireScenarios() {
                   onChange={e => {
                     setKidCostSchoolRaw(e.target.value);
                     const v = Number(e.target.value);
-                    if (v >= 0) setKidCostSchool(v);
+                    if (e.target.value !== '' && v >= 0) setKidCostSchool(v);
                   }}
                   onBlur={e => {
                     const v = Math.max(0, Number(e.target.value) || 0);
@@ -558,6 +559,7 @@ export default function FireScenarios() {
 
         {/* Bucket Editor */}
         <div className={styles.bucketsSection}>
+
           <div className={styles.bucketsSectionHeader}>
             <div className={styles.sectionLabel}>Investment Buckets</div>
             <button className={styles.bucketAddBtn} onClick={addBucket}>
@@ -571,7 +573,7 @@ export default function FireScenarios() {
             {buckets.map(bucket => (
               <div key={bucket.id} className={styles.bucketRow}>
                 <div className={styles.bucketLabelField}>
-                  <div className={styles.bucketFieldLabel}>Label</div>
+                  <div className={styles.bucketFieldLabel}>Name</div>
                   <input
                     type="text"
                     value={bucket.label}
@@ -597,9 +599,11 @@ export default function FireScenarios() {
                       <span className={styles.bucketPrefix}>$</span>
                       <input
                         type="number"
-                        value={bucket.balance}
+                        defaultValue={bucket.balance}
                         min={0}
-                        onChange={e => updateBucket(bucket.id, { balance: Math.max(0, Number(e.target.value) || 0) })}
+                        onChange={e => { const v = Number(e.target.value); if (e.target.value !== '' && v >= 0) updateBucket(bucket.id, { balance: v }); }}
+                        onBlur={e => updateBucket(bucket.id, { balance: Math.max(0, Number(e.target.value) || 0) })}
+                        onFocus={e => e.target.select()}
                         className={`${styles.bucketInput} ${styles.bucketInputLg}`}
                       />
                     </div>
@@ -610,9 +614,11 @@ export default function FireScenarios() {
                       <span className={styles.bucketPrefix}>$</span>
                       <input
                         type="number"
-                        value={bucket.monthlyContrib}
+                        defaultValue={bucket.monthlyContrib}
                         min={0}
-                        onChange={e => updateBucket(bucket.id, { monthlyContrib: Math.max(0, Number(e.target.value) || 0) })}
+                        onChange={e => { const v = Number(e.target.value); if (e.target.value !== '' && v >= 0) updateBucket(bucket.id, { monthlyContrib: v }); }}
+                        onBlur={e => updateBucket(bucket.id, { monthlyContrib: Math.max(0, Number(e.target.value) || 0) })}
+                        onFocus={e => e.target.select()}
                         className={`${styles.bucketInput} ${styles.bucketInputLg}`}
                       />
                     </div>
@@ -622,11 +628,13 @@ export default function FireScenarios() {
                     <div className={styles.bucketFieldRow}>
                       <input
                         type="number"
-                        value={bucket.annualReturn}
+                        defaultValue={bucket.annualReturn}
                         min={0}
                         max={50}
                         step={0.5}
-                        onChange={e => updateBucket(bucket.id, { annualReturn: Math.min(50, Math.max(0, Number(e.target.value) || 0)) })}
+                        onChange={e => { const v = Number(e.target.value); if (e.target.value !== '' && v >= 0 && v <= 50) updateBucket(bucket.id, { annualReturn: v }); }}
+                        onBlur={e => updateBucket(bucket.id, { annualReturn: Math.min(50, Math.max(0, Number(e.target.value) || 0)) })}
+                        onFocus={e => e.target.select()}
                         className={`${styles.bucketInput} ${styles.bucketInputMd}`}
                       />
                       <span className={styles.bucketPrefix}>%</span>
@@ -647,6 +655,7 @@ export default function FireScenarios() {
             ))}
           </div>
         </div>
+        </div>{/* end inputsCard */}
 
         {/* Scenario Toggle Buttons */}
         <div className={styles.scenarioBtnRow}>

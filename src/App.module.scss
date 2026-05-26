@@ -137,9 +137,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 }
 
 // ─── Inputs Panel ─────────────────────────────────────────────────
-.inputsPanel {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.inputsCard {
   margin-bottom: 40px;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -148,13 +146,21 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 
   @media (max-width: 760px) {
-    grid-template-columns: 1fr 1fr;
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
     border-radius: 0;
     box-shadow: none;
     overflow: visible;
+  }
+}
+
+.inputsPanel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--border);
   }
 
   @media (max-width: 600px) {
@@ -873,7 +879,16 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 
 // ─── Bucket Editor ────────────────────────────────────────────────
 .bucketsSection {
-  margin-bottom: 40px;
+  border-top: 1px solid var(--border);
+  padding: 24px 24px 28px;
+
+  @media (max-width: 760px) {
+    padding: 20px 16px 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-card);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
 }
 
 .bucketsSectionHeader {
@@ -898,12 +913,12 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 
 .bucketRow {
   display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  gap: 10px;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-dim);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 10px 14px;
 
   @media (max-width: 600px) {
     flex-wrap: wrap;
@@ -912,17 +927,21 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 }
 
 .bucketLabelField {
-  flex: 1;
-  min-width: 80px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  padding-right: 12px;
+  border-right: 1px solid var(--border-dim);
 }
 
 .bucketNumGroup {
   display: flex;
-  gap: 8px;
-  align-items: flex-end;
+  flex: 1;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
 
   @media (max-width: 600px) {
     order: 3;
@@ -932,7 +951,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 
 .bucketDeleteField {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   flex-shrink: 0;
 
   @media (max-width: 600px) {
@@ -943,7 +962,8 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 
 .bucketField {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 4px;
 }
 
@@ -953,6 +973,8 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .bucketFieldRow {
@@ -986,6 +1008,14 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
     box-shadow: 0 0 0 2px var(--focus-ring);
   }
 
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  appearance: textfield;
+
   @media (max-width: 760px) { font-size: 16px; }
 }
 
@@ -1000,7 +1030,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   outline: none;
   border: 1px solid var(--border-input);
   transition: border-color 0.15s;
-  width: 100%;
+  width: 140px;
   min-width: 0;
 
   &:focus {
@@ -1012,8 +1042,8 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 }
 
 .bucketInputSm { width: 56px; }
-.bucketInputMd { width: 72px; }
-.bucketInputLg { width: 96px; }
+.bucketInputMd { width: 44px; }
+.bucketInputLg { width: 80px; }
 
 .bucketAddBtn {
   display: flex;
@@ -1069,7 +1099,6 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 .bucketTaxPills {
   display: flex;
   gap: 4px;
-  margin-top: 6px;
 }
 
 .bucketTaxPill {
