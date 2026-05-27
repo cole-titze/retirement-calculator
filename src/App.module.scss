@@ -986,18 +986,16 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
-
-  @media (max-width: 600px) {
-    order: 2;
-    margin-left: auto;
-  }
+  margin-left: auto;
 }
 
 .bucketMoveButtons {
   display: none;
+  flex-shrink: 0;
 
   @media (max-width: 600px) {
     display: flex;
+    flex-direction: column;
     gap: 2px;
   }
 }

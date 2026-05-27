@@ -596,6 +596,20 @@ export default function FireScenarios() {
                   onDragStart={e => { draggedBucketId.current = bucket.id; e.dataTransfer.effectAllowed = 'move'; }}
                   onDragEnd={() => { draggedBucketId.current = null; setDragOverBucketId(null); }}
                 >⠿</div>
+                <div className={styles.bucketMoveButtons}>
+                  <button
+                    className={styles.bucketMoveBtn}
+                    onClick={() => moveBucketStep(bucket.id, -1)}
+                    disabled={buckets.indexOf(bucket) === 0}
+                    aria-label="Move bucket up"
+                  >▲</button>
+                  <button
+                    className={styles.bucketMoveBtn}
+                    onClick={() => moveBucketStep(bucket.id, 1)}
+                    disabled={buckets.indexOf(bucket) === buckets.length - 1}
+                    aria-label="Move bucket down"
+                  >▼</button>
+                </div>
                 <div className={styles.bucketLabelField}>
                   <div className={styles.bucketFieldLabel}>Name</div>
                   <input
@@ -666,20 +680,6 @@ export default function FireScenarios() {
                   </div>
                 </div>
                 <div className={styles.bucketDeleteField}>
-                  <div className={styles.bucketMoveButtons}>
-                    <button
-                      className={styles.bucketMoveBtn}
-                      onClick={() => moveBucketStep(bucket.id, -1)}
-                      disabled={buckets.indexOf(bucket) === 0}
-                      aria-label="Move bucket up"
-                    >▲</button>
-                    <button
-                      className={styles.bucketMoveBtn}
-                      onClick={() => moveBucketStep(bucket.id, 1)}
-                      disabled={buckets.indexOf(bucket) === buckets.length - 1}
-                      aria-label="Move bucket down"
-                    >▼</button>
-                  </div>
                   <button
                     className={styles.bucketDeleteBtn}
                     onClick={() => deleteBucket(bucket.id)}
