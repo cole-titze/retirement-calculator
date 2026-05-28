@@ -219,17 +219,6 @@ export default function FireScenarios() {
     });
   };
 
-  const moveBucketStep = (id: string, dir: -1 | 1) => {
-    setBuckets(prev => {
-      const idx = prev.findIndex(b => b.id === id);
-      const next = idx + dir;
-      if (next < 0 || next >= prev.length) return prev;
-      const arr = [...prev];
-      [arr[idx], arr[next]] = [arr[next], arr[idx]];
-      return arr;
-    });
-  };
-
   const addBucket = () =>
     setBuckets(prev => [...prev, {
       id: `b${Date.now()}`,
@@ -592,52 +581,38 @@ export default function FireScenarios() {
                 onDragOver={e => { e.preventDefault(); if (draggedBucketId.current !== bucket.id) setDragOverBucketId(bucket.id); }}
                 onDrop={e => { e.preventDefault(); if (draggedBucketId.current && draggedBucketId.current !== bucket.id) reorderBuckets(draggedBucketId.current, bucket.id); setDragOverBucketId(null); }}
                 onDragLeave={() => setDragOverBucketId(null)}
-                onTouchStart={e => { touchDragRef.current = { id: bucket.id, started: false, startY: e.touches[0].clientY }; }}
-                onTouchMove={e => {
-                  if (!touchDragRef.current) return;
-                  const dy = Math.abs(e.touches[0].clientY - touchDragRef.current.startY);
-                  if (!touchDragRef.current.started) {
-                    if (dy < 6) return;
-                    touchDragRef.current.started = true;
-                    setTouchDraggingId(touchDragRef.current.id);
-                    draggedBucketId.current = touchDragRef.current.id;
-                  }
-                  const touch = e.touches[0];
-                  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-                  const row = el?.closest('[data-bucket-id]');
-                  const targetId = row?.getAttribute('data-bucket-id') ?? null;
-                  setDragOverBucketId(targetId !== touchDragRef.current.id ? targetId : null);
-                }}
-                onTouchEnd={() => {
-                  if (touchDragRef.current?.started && dragOverBucketId) {
-                    reorderBuckets(touchDragRef.current.id, dragOverBucketId);
-                  }
-                  touchDragRef.current = null;
-                  draggedBucketId.current = null;
-                  setTouchDraggingId(null);
-                  setDragOverBucketId(null);
-                }}
               >
                 <div
                   className={styles.bucketDragHandle}
                   draggable
                   onDragStart={e => { draggedBucketId.current = bucket.id; e.dataTransfer.effectAllowed = 'move'; }}
                   onDragEnd={() => { draggedBucketId.current = null; setDragOverBucketId(null); }}
+                  onTouchStart={e => { touchDragRef.current = { id: bucket.id, started: false, startY: e.touches[0].clientY }; }}
+                  onTouchMove={e => {
+                    if (!touchDragRef.current) return;
+                    const dy = Math.abs(e.touches[0].clientY - touchDragRef.current.startY);
+                    if (!touchDragRef.current.started) {
+                      if (dy < 4) return;
+                      touchDragRef.current.started = true;
+                      setTouchDraggingId(touchDragRef.current.id);
+                      draggedBucketId.current = touchDragRef.current.id;
+                    }
+                    const touch = e.touches[0];
+                    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const row = el?.closest('[data-bucket-id]');
+                    const targetId = row?.getAttribute('data-bucket-id') ?? null;
+                    setDragOverBucketId(targetId !== touchDragRef.current.id ? targetId : null);
+                  }}
+                  onTouchEnd={() => {
+                    if (touchDragRef.current?.started && dragOverBucketId) {
+                      reorderBuckets(touchDragRef.current.id, dragOverBucketId);
+                    }
+                    touchDragRef.current = null;
+                    draggedBucketId.current = null;
+                    setTouchDraggingId(null);
+                    setDragOverBucketId(null);
+                  }}
                 >⠿</div>
-                <div className={styles.bucketMoveButtons}>
-                  <button
-                    className={styles.bucketMoveBtn}
-                    onClick={() => moveBucketStep(bucket.id, -1)}
-                    disabled={buckets.indexOf(bucket) === 0}
-                    aria-label="Move bucket up"
-                  >▲</button>
-                  <button
-                    className={styles.bucketMoveBtn}
-                    onClick={() => moveBucketStep(bucket.id, 1)}
-                    disabled={buckets.indexOf(bucket) === buckets.length - 1}
-                    aria-label="Move bucket down"
-                  >▼</button>
-                </div>
                 <div className={styles.bucketLabelField}>
                   <div className={styles.bucketFieldLabel}>Name</div>
                   <input

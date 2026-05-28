@@ -973,8 +973,16 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   }
 
   @media (max-width: 600px) {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "handle label  delete"
+      "handle nums   nums";
+    column-gap: 10px;
+    row-gap: 8px;
     padding: 10px 12px;
+    align-items: start;
   }
 }
 
@@ -996,13 +1004,24 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   padding: 0 2px;
   flex-shrink: 0;
   touch-action: none;
+  user-select: none;
 
   &:active {
     cursor: grabbing;
   }
 
   @media (max-width: 600px) {
-    display: none;
+    grid-area: handle;
+    font-size: 20px;
+    padding: 0 8px;
+    color: var(--text-dim);
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px solid var(--border-dim);
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -1014,6 +1033,20 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   gap: 6px;
   padding-right: 12px;
   border-right: 1px solid var(--border-dim);
+
+  @media (max-width: 600px) {
+    grid-area: label;
+    flex-shrink: 1;
+    min-width: 0;
+    border-right: none;
+    padding-right: 0;
+  }
+
+  .bucketFieldLabel {
+    @media (max-width: 600px) {
+      display: none;
+    }
+  }
 }
 
 .bucketNumGroup {
@@ -1024,7 +1057,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   justify-content: space-between;
 
   @media (max-width: 600px) {
-    order: 3;
+    grid-area: nums;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 8px;
@@ -1039,42 +1072,11 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   gap: 4px;
   flex-shrink: 0;
   margin-left: auto;
-}
-
-.bucketMoveButtons {
-  display: none;
-  flex-shrink: 0;
 
   @media (max-width: 600px) {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-}
-
-.bucketMoveBtn {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-dim);
-  font-size: 9px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-
-  &:hover:not(:disabled) {
-    border-color: var(--text-muted);
-    color: var(--text);
-  }
-
-  &:disabled {
-    opacity: 0.25;
-    cursor: default;
+    grid-area: delete;
+    margin-left: 0;
+    align-self: start;
   }
 }
 
@@ -1183,6 +1185,12 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   }
 
   @media (max-width: 760px) { font-size: 16px; }
+
+  @media (max-width: 600px) {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
 }
 
 .bucketInputSm { width: 56px; }
