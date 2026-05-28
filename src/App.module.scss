@@ -167,6 +167,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    border-top: none;
   }
 }
 
@@ -510,12 +511,11 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 }
 
 .sectionLabel {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
   text-transform: uppercase;
-  margin-bottom: 16px;
 }
 
 .contribBtnRow {
@@ -942,7 +942,9 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-dim);
 }
 
 .bucketHint {
@@ -977,8 +979,8 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
     grid-template-columns: auto 1fr auto;
     grid-template-rows: auto auto;
     grid-template-areas:
-      "handle label  delete"
-      "handle nums   nums";
+      "handle label  label"
+      "handle nums   delete";
     column-gap: 10px;
     row-gap: 8px;
     padding: 10px 12px;
@@ -1076,7 +1078,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   @media (max-width: 600px) {
     grid-area: delete;
     margin-left: 0;
-    align-self: start;
+    align-self: end;
   }
 }
 
@@ -1202,6 +1204,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   align-items: center;
   gap: 5px;
   padding: 5px 12px;
+  margin-top: 10px;
   border-radius: 6px;
   border: 1px dashed var(--border-input);
   background: transparent;

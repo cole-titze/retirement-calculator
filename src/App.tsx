@@ -565,9 +565,6 @@ export default function FireScenarios() {
 
           <div className={styles.bucketsSectionHeader}>
             <div className={styles.sectionLabel}>Investment Buckets</div>
-            <button className={styles.bucketAddBtn} onClick={addBucket}>
-              + Add Bucket
-            </button>
           </div>
           <div className={styles.bucketHint}>
             Life costs (mortgage, childcare) reduce the last bucket's contribution first.
@@ -695,6 +692,9 @@ export default function FireScenarios() {
               </div>
             ))}
           </div>
+          <button className={styles.bucketAddBtn} onClick={addBucket}>
+            + Add Bucket
+          </button>
         </div>
         </div>{/* end inputsCard */}
 
