@@ -204,6 +204,8 @@ export default function FireScenarios() {
 
   const draggedBucketId = useRef<string | null>(null);
   const [dragOverBucketId, setDragOverBucketId] = useState<string | null>(null);
+  const touchDragRef = useRef<{ id: string; started: boolean; startY: number } | null>(null);
+  const [touchDraggingId, setTouchDraggingId] = useState<string | null>(null);
 
   const reorderBuckets = (fromId: string, toId: string) => {
     setBuckets(prev => {
@@ -585,10 +587,36 @@ export default function FireScenarios() {
             {buckets.map(bucket => (
               <div
                 key={bucket.id}
-                className={`${styles.bucketRow}${dragOverBucketId === bucket.id ? ` ${styles.bucketRowDragOver}` : ''}`}
+                data-bucket-id={bucket.id}
+                className={`${styles.bucketRow}${dragOverBucketId === bucket.id ? ` ${styles.bucketRowDragOver}` : ''}${touchDraggingId === bucket.id ? ` ${styles.bucketRowTouchDragging}` : ''}`}
                 onDragOver={e => { e.preventDefault(); if (draggedBucketId.current !== bucket.id) setDragOverBucketId(bucket.id); }}
                 onDrop={e => { e.preventDefault(); if (draggedBucketId.current && draggedBucketId.current !== bucket.id) reorderBuckets(draggedBucketId.current, bucket.id); setDragOverBucketId(null); }}
                 onDragLeave={() => setDragOverBucketId(null)}
+                onTouchStart={e => { touchDragRef.current = { id: bucket.id, started: false, startY: e.touches[0].clientY }; }}
+                onTouchMove={e => {
+                  if (!touchDragRef.current) return;
+                  const dy = Math.abs(e.touches[0].clientY - touchDragRef.current.startY);
+                  if (!touchDragRef.current.started) {
+                    if (dy < 6) return;
+                    touchDragRef.current.started = true;
+                    setTouchDraggingId(touchDragRef.current.id);
+                    draggedBucketId.current = touchDragRef.current.id;
+                  }
+                  const touch = e.touches[0];
+                  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                  const row = el?.closest('[data-bucket-id]');
+                  const targetId = row?.getAttribute('data-bucket-id') ?? null;
+                  setDragOverBucketId(targetId !== touchDragRef.current.id ? targetId : null);
+                }}
+                onTouchEnd={() => {
+                  if (touchDragRef.current?.started && dragOverBucketId) {
+                    reorderBuckets(touchDragRef.current.id, dragOverBucketId);
+                  }
+                  touchDragRef.current = null;
+                  draggedBucketId.current = null;
+                  setTouchDraggingId(null);
+                  setDragOverBucketId(null);
+                }}
               >
                 <div
                   className={styles.bucketDragHandle}
@@ -860,7 +888,9 @@ export default function FireScenarios() {
             const s = activeData.find(sc => sc.label === contribScenario);
             if (!s) return null;
             const phases = s.phaseContribs;
-            const colTemplate = `160px repeat(${phases.length}, 1fr)`;
+            const colTemplate = isMobile
+              ? `90px repeat(${phases.length}, 1fr)`
+              : `160px repeat(${phases.length}, 1fr)`;
             const phaseBuckets = phases[0]?.snap.bucketContribs ?? [];
             const lifeCosts = [
               { key: "monthlyMortgage" as const,   label: "Mortgage",                dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },

@@ -560,6 +560,11 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   padding: 0 20px;
   min-width: 500px;
   background: var(--bg);
+
+  @media (max-width: 600px) {
+    min-width: unset;
+    padding: 0 10px;
+  }
 }
 
 .contribHeaderBucket {
@@ -579,11 +584,21 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   letter-spacing: 0.05em;
   text-align: right;
   line-height: 1.5;
+
+  @media (max-width: 600px) {
+    font-size: 8px;
+    padding: 8px 3px;
+    letter-spacing: 0;
+  }
 }
 
 .contribBody {
   padding: 8px 0;
   min-width: 500px;
+
+  @media (max-width: 600px) {
+    min-width: unset;
+  }
 }
 
 .contribSubheader {
@@ -593,12 +608,20 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   letter-spacing: 0.15em;
   color: var(--text-dim);
   text-transform: uppercase;
+
+  @media (max-width: 600px) {
+    padding: 6px 10px;
+  }
 }
 
 .contribRow {
   display: grid;
   grid-template-columns: var(--col-template, 160px 1fr);
   padding: 5px 20px;
+
+  @media (max-width: 600px) {
+    padding: 4px 10px;
+  }
 }
 
 .contribBucketName {
@@ -607,6 +630,11 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   gap: 8px;
   font-size: 13px;
   color: var(--text-body);
+
+  @media (max-width: 600px) {
+    font-size: 11px;
+    gap: 5px;
+  }
 }
 
 .bucketDot {
@@ -643,6 +671,11 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   font-family: $font-mono;
   font-size: 13px;
   padding: 0 6px;
+
+  @media (max-width: 600px) {
+    font-size: 11px;
+    padding: 0 3px;
+  }
 }
 
 .contribCellZero    { color: var(--text-dim); }
@@ -660,6 +693,10 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   border-top: 1px solid var(--border-dim);
   margin-top: 4px;
   background: var(--bg);
+
+  @media (max-width: 600px) {
+    padding: 10px 10px;
+  }
 }
 
 .contribTotalLabel {
@@ -675,12 +712,21 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   font-weight: 600;
   color: var(--text);
   padding: 0 6px;
+
+  @media (max-width: 600px) {
+    font-size: 11px;
+    padding: 0 3px;
+  }
 }
 
 .lifeCostsSection {
   padding: 8px 0;
   border-top: 1px solid var(--border-dim);
   min-width: 500px;
+
+  @media (max-width: 600px) {
+    min-width: unset;
+  }
 }
 
 .phaseBarWrapper {
@@ -937,6 +983,11 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   background: var(--bg-hover, color-mix(in srgb, var(--bg-input) 85%, var(--accent, #4dbf7c)));
 }
 
+.bucketRowTouchDragging {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
 .bucketDragHandle {
   cursor: grab;
   color: var(--text-muted, #888);
@@ -944,6 +995,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   line-height: 1;
   padding: 0 2px;
   flex-shrink: 0;
+  touch-action: none;
 
   &:active {
     cursor: grabbing;
