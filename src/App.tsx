@@ -240,15 +240,11 @@ export default function FireScenarios() {
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <div className={styles.headerEyebrow}>
-              Retirement Scenario Analysis · Age {currentAge} → 60
+              Retirement Scenario Analysis · Age {currentAge} → {retireAge}
             </div>
             <h1 className={styles.headerTitle}>
-              Four Paths<br />
-              <span className={styles.headerSubtitle}>to the same freedom</span>
+              Four Paths <span className={styles.headerSubtitle}>to the same freedom</span>
             </h1>
-            <p className={styles.headerDesc}>
-              Comparing liquid net worth trajectories across life choices. Bridge phase: {retireAge}–59½ from taxable accounts. Full retirement: 59½+ from Roth.
-            </p>
           </div>
           <div className={styles.themePicker}>
             <div className={styles.themePickerLabel}>Theme</div>
@@ -264,6 +260,24 @@ export default function FireScenarios() {
                   {t.label}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Info Panel */}
+        <div className={styles.infoPanel}>
+          <div className={styles.infoCard}>
+            <div className={styles.infoCardTerm}>FIRE</div>
+            <div className={styles.infoCardTitle}>Financial Independence, Retire Early</div>
+            <div className={styles.infoCardBody}>
+              Your FIRE number is <strong>annual spending ÷ withdrawal rate</strong>. At 4% withdrawal, you need 25× your yearly expenses. Once your portfolio hits that number, withdrawals are covered by investment returns indefinitely — you no longer need to work.
+            </div>
+          </div>
+          <div className={styles.infoCard}>
+            <div className={styles.infoCardTerm}>Coast FIRE</div>
+            <div className={styles.infoCardTitle}>Stop Contributing, Let It Grow</div>
+            <div className={styles.infoCardBody}>
+              The earliest age your portfolio can grow to your FIRE number <em>on its own</em> — with no further contributions — by your target retire age. After this point you only need income to cover living expenses, not to invest.
             </div>
           </div>
         </div>

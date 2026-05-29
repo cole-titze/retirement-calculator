@@ -22,15 +22,16 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 32px;
-  margin-bottom: 52px;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 40px;
+  padding-bottom: 20px;
 
   @media (max-width: 600px) {
     flex-direction: column;
-    gap: 20px;
+    align-items: flex-start;
+    gap: 12px;
   }
 }
 
@@ -40,20 +41,20 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
 }
 
 .headerEyebrow {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.12em;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
 }
 
 .headerTitle {
   font-family: $font-display;
-  font-size: clamp(52px, 9vw, 96px);
+  font-size: clamp(28px, 4vw, 44px);
   font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 0.95;
+  line-height: 1;
   color: var(--text);
 }
 
@@ -63,16 +64,46 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   font-style: italic;
 }
 
-.headerDesc {
-  margin-top: 22px;
-  font-size: 14px;
-  color: var(--text-muted);
-  line-height: 1.8;
-  font-weight: 400;
+// ─── Info Panel ───────────────────────────────────────────────────
+.infoPanel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 28px;
 
   @media (max-width: 600px) {
-    max-width: none;
+    grid-template-columns: 1fr;
   }
+}
+
+.infoCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.infoCardTerm {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.infoCardTitle {
+  font-family: $font-display;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.infoCardBody {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
 }
 
 // ─── Theme Picker ─────────────────────────────────────────────────
@@ -518,6 +549,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   letter-spacing: 0.18em;
   color: var(--text-dim);
   text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
 .contribBtnRow {
