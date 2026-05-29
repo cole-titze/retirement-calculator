@@ -192,6 +192,8 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   }
 
   @media (max-width: 429px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     border: 1px solid var(--border) !important;
     border-radius: 10px;
     background: var(--bg-card);
@@ -209,6 +211,10 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   color: var(--text-dim);
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border-dim);
+
+  @media (max-width: 429px) {
+    grid-column: 1 / -1;
+  }
 }
 
 .inputGroup {
