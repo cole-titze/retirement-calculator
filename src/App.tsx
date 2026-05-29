@@ -188,6 +188,10 @@ export default function FireScenarios() {
     return row;
   });
 
+  const fireLineNum = Math.round(
+    retireSpend * Math.pow(1 + inflationRate, Math.max(0, retireAge - currentAge)) / withdrawalRateDecimal / 1000
+  );
+
   const toggleScenario = (label: string) => {
     setActiveScenarios(prev =>
       prev.includes(label)
@@ -751,35 +755,25 @@ export default function FireScenarios() {
                 tickLine={false}
                 tickFormatter={fmtM}
                 width={isMobile ? 46 : 70}
+                domain={[0, (dataMax: number) => Math.max(dataMax, fireLineNum * 1.08)]}
               />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceArea x1={retireAge} x2={60} fill={chart.honey} fillOpacity={0.07} />
               <ReferenceArea x1={60} x2={100} fill={chart.sage} fillOpacity={0.06} />
               <ReferenceLine x={retireAge} stroke={chart.retireRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: `Retire ${retireAge} →`, fill: chart.retireRef, fontSize: 9, position: "insideTopLeft" }} />
               <ReferenceLine x={60} stroke={chart.rothRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: "Roth 59½ →", fill: chart.rothRef, fontSize: 9, position: "insideTopLeft" }} />
-              {activeData.map(s => {
-                if (!activeScenarios.includes(s.label)) return null;
-                const yearsToRetire = Math.max(0, retireAge - currentAge);
-                const futureSpend = s.retireSpend * Math.pow(1 + inflationRate, yearsToRetire);
-                const fireNum = Math.round(futureSpend / withdrawalRateDecimal / 1000);
-                return (
-                  <ReferenceLine
-                    key={`fire-${s.label}`}
-                    y={fireNum}
-                    stroke={s.color}
-                    strokeDasharray="6 3"
-                    strokeWidth={1}
-                    strokeOpacity={0.4}
-                    label={{
-                      value: `FIRE ${fmtM(fireNum)}${inflationRate > 0 ? " (infl.)" : ""}`,
-                      fill: s.color,
-                      fontSize: 8,
-                      position: "insideTopRight",
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              })}
+              <ReferenceLine
+                y={fireLineNum}
+                stroke={chart.retireRef}
+                strokeDasharray="5 3"
+                strokeWidth={1.5}
+                label={{
+                  value: `FIRE ${fmtM(fireLineNum)}${inflationRate > 0 ? " (infl.adj.)" : ""}`,
+                  fill: chart.retireRef,
+                  fontSize: 9,
+                  position: "insideTopRight",
+                }}
+              />
               {activeData.map(s => {
                 if (!activeScenarios.includes(s.label)) return null;
                 const coastAge = s.coastFireAge;
