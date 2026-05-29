@@ -740,7 +740,7 @@ export default function FireScenarios() {
               />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceArea x1={retireAge} x2={60} fill={chart.honey} fillOpacity={0.07} />
-              <ReferenceArea x1={60} x2={70} fill={chart.sage} fillOpacity={0.06} />
+              <ReferenceArea x1={60} x2={100} fill={chart.sage} fillOpacity={0.06} />
               <ReferenceLine x={retireAge} stroke={chart.retireRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: `Retire ${retireAge} →`, fill: chart.retireRef, fontSize: 9, position: "insideTopLeft" }} />
               <ReferenceLine x={60} stroke={chart.rothRef} strokeDasharray="3 5" strokeWidth={1} label={{ value: "Roth 59½ →", fill: chart.rothRef, fontSize: 9, position: "insideTopLeft" }} />
               {activeData.map(s => {

@@ -95,11 +95,11 @@ export function runScenario({
   const coastLabel =
     coastFireAge !== null ? `COAST ${MONTHS[coastFireMonth ?? 0]} ${coastFireAge}` : null;
 
-  // ── Second pass: full simulation age currentAge → 70 ──
+  // ── Second pass: full simulation age currentAge → 100 ──
   const balances = buckets.map(b => b.balance);
   const data = [];
 
-  for (let age = currentAge; age <= 70; age++) {
+  for (let age = currentAge; age <= 100; age++) {
     const isAccumulating = age < retireAge;
     const isBridge = age >= retireAge && age < 60;
     const isRetired = age >= 60;
