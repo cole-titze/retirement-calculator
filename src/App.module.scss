@@ -936,6 +936,10 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
     background: var(--bg-card);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   }
+
+  @media (max-width: 429px) {
+    margin-top: 10px;
+  }
 }
 
 .bucketsSectionHeader {

@@ -26,11 +26,11 @@ const baseParams = {
 };
 
 describe("runScenario — basic shape", () => {
-  it("returns data from currentAge to 70", () => {
+  it("returns data from currentAge to 100", () => {
     const result = runScenario({ ...SCENARIO_DEFS[0], ...baseParams });
     expect(result.data[0].age).toBe(26);
-    expect(result.data[result.data.length - 1].age).toBe(70);
-    expect(result.data).toHaveLength(70 - 26 + 1);
+    expect(result.data[result.data.length - 1].age).toBe(100);
+    expect(result.data).toHaveLength(100 - 26 + 1);
   });
 
   it("passes through label and color unchanged", () => {
