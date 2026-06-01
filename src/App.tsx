@@ -188,9 +188,7 @@ export default function FireScenarios() {
     return row;
   });
 
-  const fireLineNum = Math.round(
-    retireSpend * Math.pow(1 + inflationRate, Math.max(0, retireAge - currentAge)) / withdrawalRateDecimal / 1000
-  );
+  const fireLineNum = Math.round(retireSpend / withdrawalRateDecimal / 1000);
 
   const toggleScenario = (label: string) => {
     setActiveScenarios(prev =>
@@ -768,7 +766,7 @@ export default function FireScenarios() {
                 strokeDasharray="5 3"
                 strokeWidth={1.5}
                 label={{
-                  value: `FIRE ${fmtM(fireLineNum)}${inflationRate > 0 ? " (infl.adj.)" : ""}`,
+                  value: `FIRE ${fmtM(fireLineNum)} (today $)`,
                   fill: chart.retireRef,
                   fontSize: 9,
                   position: "insideTopRight",
