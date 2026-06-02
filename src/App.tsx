@@ -874,7 +874,7 @@ export default function FireScenarios() {
               : `160px repeat(${phases.length}, 1fr)`;
             const phaseBuckets = phases[0]?.snap.bucketContribs ?? [];
             const lifeCosts = [
-              { key: "monthlyMortgage" as const,   label: "Mortgage",                dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },
+              { key: "monthlyHousing" as const,    label: "Housing (rent/mortgage)",  dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },
               { key: "monthlyChildcare" as const,  label: "Kids (Childcare/School)", dotClass: styles.bucketDotOrange, cellClass: styles.contribCellOrange },
             ] as const;
             return (

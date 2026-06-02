@@ -17,23 +17,25 @@ const baseConfig: CostConfig = {
 };
 
 describe("getMonthlyCosts — no house, no kids", () => {
-  it("returns zero total for no house no kids", () => {
+  it("returns rent as housing cost for no house no kids", () => {
     const result = getMonthlyCosts(30, baseConfig);
-    expect(result.total).toBe(0);
+    expect(result.housing).toBe(1500);
+    expect(result.childcare).toBe(0);
+    expect(result.total).toBe(1500);
   });
 });
 
 describe("getMonthlyCosts — house saving period", () => {
   const config: CostConfig = { ...baseConfig, hasHouse: true, kid1BirthAge: 30, kid2BirthAge: 32 };
 
-  it("no mortgage cost before house purchase", () => {
+  it("housing cost is rent before house purchase", () => {
     const result = getMonthlyCosts(26, config);
-    expect(result.mortgage).toBe(0);
+    expect(result.housing).toBe(config.rentAmount);
   });
 
-  it("mortgage equals mortgagePremium after house purchase", () => {
+  it("housing equals rent + mortgagePremium after house purchase", () => {
     const result = getMonthlyCosts(29, config);
-    expect(result.mortgage).toBe(config.mortgagePremium);
+    expect(result.housing).toBe(config.rentAmount + config.mortgagePremium);
   });
 
   it("house costs do not appear in childcare field", () => {
@@ -71,7 +73,7 @@ describe("getMonthlyCosts — two kids", () => {
 
   it("total equals sum of parts", () => {
     const result = getMonthlyCosts(32, config);
-    expect(result.total).toBe(result.mortgage + result.childcare);
+    expect(result.total).toBe(result.housing + result.childcare);
   });
 });
 
@@ -79,16 +81,16 @@ describe("getMonthlyCosts — propTaxIns", () => {
   const houseBuyAge = 28;
   const config: CostConfig = { ...baseConfig, hasHouse: true, propTaxIns: 800, rentAmount: 0, kid1BirthAge: 30, kid2BirthAge: 32 };
 
-  it("uses propTaxIns as mortgage cost after mortgage is paid off", () => {
+  it("uses propTaxIns as housing cost after mortgage is paid off", () => {
     const afterPayoff = houseBuyAge + 31; // 30-year mortgage
     const result = getMonthlyCosts(afterPayoff, config);
-    expect(result.mortgage).toBe(800);
+    expect(result.housing).toBe(800);
   });
 
-  it("propTaxIns is reduced by rentAmount after payoff", () => {
+  it("propTaxIns after payoff is not reduced by rentAmount", () => {
     const configWithRent: CostConfig = { ...config, rentAmount: 300 };
     const afterPayoff = houseBuyAge + 31;
     const result = getMonthlyCosts(afterPayoff, configWithRent);
-    expect(result.mortgage).toBe(500); // 800 - 300
+    expect(result.housing).toBe(800); // propTaxIns only, no rent deduction
   });
 });
