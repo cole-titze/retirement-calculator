@@ -65,26 +65,26 @@ describe("buildPhaseContribs — no house, no kids", () => {
     });
   });
 
-  it("totalOut is 0 with no house and no kids", () => {
+  it("totalOut equals rentAmount with no house and no kids", () => {
     const phases = buildPhaseContribs({
       ...base,
       buckets: [bucket()],
       config: makeConfig(),
     });
-    phases.forEach(p => expect(p.snap.totalOut).toBe(0));
+    phases.forEach(p => expect(p.snap.totalOut).toBe(1500)); // always paying rent
   });
 });
 
 describe("buildPhaseContribs — house", () => {
   const config = makeConfig({ hasHouse: true });
 
-  it("includes a post-purchase phase with mortgage cost", () => {
+  it("includes a post-purchase phase with full mortgage housing cost", () => {
     const phases = buildPhaseContribs({
       ...base, hasHouse: true, buckets: [bucket()], config,
     });
-    const mortgage = phases.find(p => p.snap.monthlyMortgage > 0);
-    expect(mortgage).toBeDefined();
-    expect(mortgage!.snap.monthlyMortgage).toBe(config.mortgagePremium);
+    const postPurchase = phases.find(p => p.label.startsWith("After House Purchase"));
+    expect(postPurchase).toBeDefined();
+    expect(postPurchase!.snap.monthlyHousing).toBe(config.rentAmount + config.mortgagePremium);
   });
 });
 
@@ -109,7 +109,7 @@ describe("buildPhaseContribs — life cost deduction from last bucket", () => {
     // First (roth): deduct min(2000, 1300)=1300. Roth remaining = 700.
     const bRoth   = bucket({ id: "roth",   label: "Roth",   monthlyContrib: 2000 });
     const bMarket = bucket({ id: "market", label: "Market", monthlyContrib: 500 });
-    const config  = makeConfig({ numKids: 1, kid1BirthAge: 26 });
+    const config  = makeConfig({ numKids: 1, kid1BirthAge: 26, rentAmount: 0 });
 
     const phases = buildPhaseContribs({
       ...base, numKids: 1, kid1BirthAge: 26, retireAge: 55,
@@ -126,7 +126,7 @@ describe("buildPhaseContribs — life cost deduction from last bucket", () => {
     // Roth($2000), Market($2000). Childcare=$1800. Market(last) absorbs all.
     const bRoth   = bucket({ id: "roth",   label: "Roth",   monthlyContrib: 2000 });
     const bMarket = bucket({ id: "market", label: "Market", monthlyContrib: 2000 });
-    const config  = makeConfig({ numKids: 1, kid1BirthAge: 26 });
+    const config  = makeConfig({ numKids: 1, kid1BirthAge: 26, rentAmount: 0 });
 
     const phases = buildPhaseContribs({
       ...base, numKids: 1, kid1BirthAge: 26, retireAge: 55,

@@ -82,7 +82,7 @@ export function buildPhaseContribs({
         snap: {
           bucketContribs,
           totalInvested,
-          monthlyMortgage: costs.mortgage,
+          monthlyHousing: costs.housing,
           monthlyChildcare: costs.childcare,
           totalOut: costs.total,
         },

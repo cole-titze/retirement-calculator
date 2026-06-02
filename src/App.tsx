@@ -188,9 +188,7 @@ export default function FireScenarios() {
     return row;
   });
 
-  const fireLineNum = Math.round(
-    retireSpend * Math.pow(1 + inflationRate, Math.max(0, retireAge - currentAge)) / withdrawalRateDecimal / 1000
-  );
+  const fireLineNum = Math.round(retireSpend / withdrawalRateDecimal / 1000);
 
   const toggleScenario = (label: string) => {
     setActiveScenarios(prev =>
@@ -768,7 +766,7 @@ export default function FireScenarios() {
                 strokeDasharray="5 3"
                 strokeWidth={1.5}
                 label={{
-                  value: `FIRE ${fmtM(fireLineNum)}${inflationRate > 0 ? " (infl.adj.)" : ""}`,
+                  value: `FIRE ${fmtM(fireLineNum)} (today $)`,
                   fill: chart.retireRef,
                   fontSize: 9,
                   position: "insideTopRight",
@@ -876,7 +874,7 @@ export default function FireScenarios() {
               : `160px repeat(${phases.length}, 1fr)`;
             const phaseBuckets = phases[0]?.snap.bucketContribs ?? [];
             const lifeCosts = [
-              { key: "monthlyMortgage" as const,   label: "Mortgage",                dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },
+              { key: "monthlyHousing" as const,    label: "Housing (rent/mortgage)",  dotClass: styles.bucketDotPink,   cellClass: styles.contribCellPink },
               { key: "monthlyChildcare" as const,  label: "Kids (Childcare/School)", dotClass: styles.bucketDotOrange, cellClass: styles.contribCellOrange },
             ] as const;
             return (

@@ -94,7 +94,7 @@ describe("runScenario — coast FIRE", () => {
 
 describe("runScenario — house scenarios", () => {
   it("house scenario accumulates positive portfolio", () => {
-    const result = runScenario({ ...SCENARIO_DEFS[1], ...baseParams });
+    const result = runScenario({ ...SCENARIO_DEFS[1], ...baseParams, rentAmount: 0 });
     const atRetire = result.data.find(d => d.age === baseParams.retireAge)!;
     expect(atRetire.total).toBeGreaterThan(0);
   });
@@ -123,11 +123,11 @@ describe("runScenario — bucket differences", () => {
 describe("runScenario — multi-bucket return rates", () => {
   it("higher return bucket accumulates more than lower return bucket", () => {
     const lowReturn = runScenario({
-      ...SCENARIO_DEFS[0], ...baseParams,
+      ...SCENARIO_DEFS[0], ...baseParams, rentAmount: 0,
       buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 2, taxType: "taxable" as const }],
     });
     const highReturn = runScenario({
-      ...SCENARIO_DEFS[0], ...baseParams,
+      ...SCENARIO_DEFS[0], ...baseParams, rentAmount: 0,
       buckets: [{ id: "a", label: "A", balance: 10000, monthlyContrib: 0, annualReturn: 10, taxType: "taxable" as const }],
     });
     const retireLow  = lowReturn.data.find(d => d.age === baseParams.retireAge)!;
@@ -157,8 +157,8 @@ describe("runScenario — multi-bucket return rates", () => {
 
 describe("runScenario — college costs", () => {
   it("college deduction reduces total at kid's 18th birthday", () => {
-    const withKid    = runScenario({ ...SCENARIO_DEFS[2], ...baseParams }); // House + 1 Kid
-    const withoutKid = runScenario({ ...SCENARIO_DEFS[1], ...baseParams }); // House Only
+    const withKid    = runScenario({ ...SCENARIO_DEFS[2], ...baseParams, rentAmount: 0 }); // House + 1 Kid
+    const withoutKid = runScenario({ ...SCENARIO_DEFS[1], ...baseParams, rentAmount: 0 }); // House Only
     // House+1Kid scenario has a college deduction; House Only does not
     // At any age after kid turns 18, the difference should reflect the deduction
     const kid1BirthAge = 30; // hasHouse=true → kid1BirthAge=30
@@ -180,7 +180,7 @@ describe("runScenario — college costs", () => {
 describe("runScenario — bridge and retirement spending", () => {
   it("portfolio decreases during bridge phase", () => {
     const result = runScenario({
-      ...SCENARIO_DEFS[0], ...baseParams,
+      ...SCENARIO_DEFS[0], ...baseParams, rentAmount: 0,
       buckets: [{ id: "a", label: "A", balance: 500000, monthlyContrib: 0, annualReturn: 0, taxType: "taxable" as const }],
       inflationRate: 0,
     });
@@ -352,7 +352,7 @@ describe("runScenario — user-configurable cost inputs", () => {
     expect(lowAt.total).toBeGreaterThan(highAt.total);
   });
 
-  it("propTaxIns appears after mortgage payoff: getMonthlyCosts returns propTaxIns as mortgage", () => {
+  it("propTaxIns appears after mortgage payoff: getMonthlyCosts returns propTaxIns as housing", () => {
     const houseBuyAge = 28;
     const config: CostConfig = {
       hasHouse: true,
@@ -368,6 +368,6 @@ describe("runScenario — user-configurable cost inputs", () => {
     };
     // Mortgage paid off at houseBuyAge + 30 = 58; check age 59 (> 58)
     const costs = getMonthlyCosts(houseBuyAge + 31, config);
-    expect(costs.mortgage).toBe(800);
+    expect(costs.housing).toBe(800);
   });
 });

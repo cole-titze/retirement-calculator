@@ -31,7 +31,7 @@ export interface CostConfig {
 export interface PhaseSnap {
   bucketContribs: { id: string; label: string; amount: number }[];
   totalInvested: number;
-  monthlyMortgage: number;
+  monthlyHousing: number;  // rent, full mortgage, or propTaxIns depending on phase
   monthlyChildcare: number;
   totalOut: number;
 }
