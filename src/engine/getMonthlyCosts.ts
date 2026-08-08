@@ -1,7 +1,11 @@
 import type { CostConfig } from "../types";
 
 export interface MonthlyCosts {
-  housing: number;  // rent (renting), full mortgage payment (buying), or propTaxIns (after payoff)
+  // Extra monthly housing cost above the rent baseline.
+  // No-house path: 0 (rent is the assumed baseline, paid from income separately).
+  // Has-house, mortgage phase: mortgagePremium (the extra cost above rent).
+  // Has-house, post-payoff: max(0, propTaxIns − rentAmount) (often 0 if owning is cheaper).
+  housing: number;
   childcare: number;
   total: number;
 }
@@ -12,13 +16,11 @@ export function getMonthlyCosts(age: number, config: CostConfig): MonthlyCosts {
   let housing = 0;
   let childcare = 0;
 
-  if (!hasHouse || age < houseBuyAge) {
-    housing = rentAmount;                        // renting
-  } else {
+  if (hasHouse && age >= houseBuyAge) {
     const mortgagePaidOff = houseBuyAge + 30;
     housing = age < mortgagePaidOff
-      ? rentAmount + mortgagePremium             // full mortgage = rent + premium
-      : propTaxIns;                              // taxes/insurance only after payoff
+      ? mortgagePremium                          // extra cost above rent during mortgage
+      : Math.max(0, propTaxIns - rentAmount);   // tax/insurance minus rent savings after payoff
   }
 
   if (numKids >= 1) {

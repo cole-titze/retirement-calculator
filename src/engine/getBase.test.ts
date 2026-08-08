@@ -17,25 +17,25 @@ const noHouseNoKids: CostConfig = {
 };
 
 describe("getMonthlyCosts — no house, no kids", () => {
-  it("returns rent as housing cost for no house no kids", () => {
+  it("returns zero extra housing cost (rent is the baseline)", () => {
     const costs = getMonthlyCosts(30, noHouseNoKids);
-    expect(costs.housing).toBe(1500);
+    expect(costs.housing).toBe(0);
     expect(costs.childcare).toBe(0);
-    expect(costs.total).toBe(1500);
+    expect(costs.total).toBe(0);
   });
 });
 
 describe("getMonthlyCosts — house", () => {
   const config: CostConfig = { ...noHouseNoKids, hasHouse: true, kid1BirthAge: 30, kid2BirthAge: 32 };
 
-  it("housing is rent before house purchase", () => {
+  it("no extra cost before house purchase", () => {
     const costs = getMonthlyCosts(26, config);
-    expect(costs.housing).toBe(1500);
+    expect(costs.housing).toBe(0);
   });
 
-  it("housing is rent + mortgagePremium after purchase", () => {
+  it("housing equals mortgagePremium after purchase", () => {
     const costs = getMonthlyCosts(29, config);
-    expect(costs.housing).toBe(3000); // 1500 rent + 1500 premium
+    expect(costs.housing).toBe(1500);
   });
 
   it("total equals sum of parts", () => {
