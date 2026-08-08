@@ -59,9 +59,9 @@ const THEMES: { id: Theme; label: string }[] = [
 ];
 
 const THEME_SCENARIO_COLORS: Record<Theme, [string, string, string, string]> = {
-  paper:    ["#2e7d52", "#1d5f8a", "#9a6820", "#8f2f2f"],
-  midnight: ["#4dbf7c", "#5ba3d8", "#d49540", "#cc5858"],
-  slate:    ["#3dbd7a", "#68acf0", "#e0b050", "#e06565"],
+  paper:    ["#2e7d52", "#1d5f8a", "#9a6820", "#6b3f9e"],
+  midnight: ["#4dbf7c", "#5ba3d8", "#d49540", "#a96de0"],
+  slate:    ["#3dbd7a", "#68acf0", "#e0b050", "#a06dd8"],
 };
 
 const THEME_CHART: Record<Theme, { grid: string; axis: string; tick: string; retireRef: string; rothRef: string; honey: string; sage: string }> = {
