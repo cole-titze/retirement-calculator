@@ -943,7 +943,7 @@ export default function FireScenarios() {
                     })}
                     <div className={styles.phaseBarWrapper}>
                       {phases.map((p, i) => {
-                        const total = p.snap.totalInvested + p.snap.totalOut + 500;
+                        const total = p.snap.totalInvested + p.snap.totalOut;
                         return (
                           <div key={i} className={styles.phaseBarItem}>
                             <div className={styles.phaseBarLabel}>{p.label}</div>

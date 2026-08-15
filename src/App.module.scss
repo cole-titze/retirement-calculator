@@ -782,7 +782,7 @@ $font-mono:    'IBM Plex Mono', 'Courier New', monospace;
   height: 4px;
   border-radius: 2px;
   overflow: hidden;
-  background: var(--border-dim);
+  background: transparent;
 }
 
 .phaseBarInvested {
