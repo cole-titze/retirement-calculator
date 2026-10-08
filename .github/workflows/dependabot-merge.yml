@@ -14,6 +14,8 @@ permissions:
   contents: write
   pull-requests: write
   actions: write
+  checks: read     # without these the PRs' check results come back empty
+  statuses: read
 
 jobs:
   merge:
@@ -30,7 +32,7 @@ jobs:
               --json number,title,mergeable,statusCheckRollup --jq '
                 .[] | select(.title | test("^Bump the \\S+ group| in the \\S+ group "))
                     | select(.title | test("the actions group") | not)
-                    | select(.mergeable == "MERGEABLE")
+                    | select(.mergeable != "CONFLICTING")  # can be UNKNOWN until GitHub computes it
                     | select((.statusCheckRollup | length) > 0)
                     | select(all(.statusCheckRollup[]; (.conclusion // .state) as $c | ["SUCCESS", "NEUTRAL", "SKIPPED"] | index($c)))
                     | .number'); do
