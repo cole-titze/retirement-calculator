@@ -13,6 +13,15 @@ updates:
         update-types: [minor, patch]
       npm-majors:
         update-types: [major]
+    ignore:
+      # ESLint 10 waits for eslint-plugin-react to support it
+      - dependency-name: "eslint"
+        update-types: [version-update:semver-major]
+      - dependency-name: "@eslint/js"
+        update-types: [version-update:semver-major]
+      # TypeScript majors wait for typescript-eslint to support them (it allows <6.1)
+      - dependency-name: "typescript"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker
     directory: /
