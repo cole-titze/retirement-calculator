@@ -1,10 +1,11 @@
 name: Dependabot merge
 
-# Merges Dependabot's grouped minor/patch PRs ("Bump the <group> group ...", or
-# "Bump X from A to B ... in the <group> group" when the group has one update) once every check on
-# them has passed. Majors aren't grouped, and GITHUB_TOKEN can't merge changes to workflow files
-# (the actions group), so those stay open for the k8s-major-upgrade skill.
-# Merges made with GITHUB_TOKEN don't trigger push workflows, so the image builds are dispatched here.
+# Merges Dependabot's grouped minor/patch PRs once every check on them has passed.
+# Titles are "Bump the <group> group ...", or "Bump X from A to B ... in the <group>
+# group" when the group has one update. The "-majors" groups and the actions group
+# (GITHUB_TOKEN can't merge changes to workflow files) stay open for the
+# k8s-major-upgrade skill. Merges made with GITHUB_TOKEN don't trigger push
+# workflows, so the image builds are dispatched here.
 on:
   schedule:
     - cron: '0 14 * * *'
@@ -31,7 +32,7 @@ jobs:
           for n in $(gh pr list --author app/dependabot --state open --limit 50 \
               --json number,title,mergeable,statusCheckRollup --jq '
                 .[] | select(.title | test("^Bump the \\S+ group| in the \\S+ group "))
-                    | select(.title | test("the actions group") | not)
+                    | select(.title | test("the actions group|-majors group") | not)
                     | select(.mergeable != "CONFLICTING")  # can be UNKNOWN until GitHub computes it
                     | select((.statusCheckRollup | length) > 0)
                     | select(all(.statusCheckRollup[]; (.conclusion // .state) as $c | ["SUCCESS", "NEUTRAL", "SKIPPED"] | index($c)))

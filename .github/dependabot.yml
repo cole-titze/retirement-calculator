@@ -1,5 +1,7 @@
-# Weekly dependency PRs. Minor and patch updates are grouped into one PR per
-# ecosystem; majors get their own PRs. Node majors are upgraded on purpose.
+# Weekly dependency PRs: one PR per ecosystem for minor/patch updates (merged
+# automatically by dependabot-merge.yml once CI passes) and one for majors (the
+# "-majors" groups, handled by the k8s-major-upgrade skill). Node majors are
+# upgraded on purpose.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -9,6 +11,8 @@ updates:
     groups:
       npm:
         update-types: [minor, patch]
+      npm-majors:
+        update-types: [major]
 
   - package-ecosystem: docker
     directory: /
