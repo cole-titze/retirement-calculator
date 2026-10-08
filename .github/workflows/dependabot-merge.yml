@@ -1,0 +1,42 @@
+name: Dependabot merge
+
+# Merges Dependabot's grouped minor/patch PRs ("Bump the <group> group ...") once every check on
+# them has passed. Majors aren't grouped, and GITHUB_TOKEN can't merge changes to workflow files
+# (the actions group), so those stay open for the k8s-major-upgrade skill.
+# Merges made with GITHUB_TOKEN don't trigger push workflows, so the image builds are dispatched here.
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      REBUILD: build.yml
+    steps:
+      - name: Merge grouped Dependabot PRs whose checks passed
+        run: |
+          merged=0
+          for n in $(gh pr list --author app/dependabot --state open --limit 50 \
+              --json number,title,mergeable,statusCheckRollup --jq '
+                .[] | select(.title | test("^Bump the \\S+ group"))
+                    | select(.title | startswith("Bump the actions group") | not)
+                    | select(.mergeable == "MERGEABLE")
+                    | select((.statusCheckRollup | length) > 0)
+                    | select(all(.statusCheckRollup[]; (.conclusion // .state) as $c | ["SUCCESS", "NEUTRAL", "SKIPPED"] | index($c)))
+                    | .number'); do
+            gh pr merge "$n" --squash --delete-branch && merged=1
+          done
+          echo "merged=$merged" >> "$GITHUB_ENV"
+
+      - name: Rebuild images
+        if: env.merged == '1'
+        run: for w in $REBUILD; do gh workflow run "$w" --ref main; done
