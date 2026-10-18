@@ -21,6 +21,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # A hung build fails here instead of after the 6 h default
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write

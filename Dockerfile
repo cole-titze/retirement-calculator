@@ -1,4 +1,6 @@
-FROM node:22-alpine AS build
+# The build output is static files, so build natively: node under QEMU crashes (illegal
+# instruction) in the arm64 leg of the multi-arch build
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
