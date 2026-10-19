@@ -1,0 +1,38 @@
+name: Security Scan
+
+# Weekly Trivy scan of retirement-calculator (the :prod image the cluster deploys).
+# Same setup as nhl-odds' security-scan.yml; bump the action SHA and TRIVY_VERSION together.
+on:
+  schedule:
+    - cron: '0 10 * * 0'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TRIVY_VERSION: v0.76.0
+
+jobs:
+  scan:
+    # The cluster runs arm64, so scan the arm64 image natively
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_PLATFORM: linux/arm64
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          image-ref: ghcr.io/${{ github.repository }}:prod
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
