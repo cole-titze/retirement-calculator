@@ -9,7 +9,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  TRIVY_VERSION: v0.76.0
+  TRIVY_VERSION: v0.76.1
 
 jobs:
   scan:
