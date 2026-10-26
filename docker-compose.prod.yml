@@ -1,3 +1,5 @@
+# Not closely maintained; may lag behind production. Production is deployed by
+# https://github.com/cole-titze/ansible-setup (raspberry-pi-playbooks/cluster/kubernetes/retirement-calculator/)
 name: retirement-calculator
 
 services:

@@ -29,6 +29,8 @@ docker run -p 8080:80 retirement-calculator
 
 ## Cloudflare Tunnel
 
+> **Note:** The Docker Compose and `k8s/deployment.yaml` setups below aren't closely maintained and may lag behind production (no pinned image tags, network policies or pod hardening). Production is deployed by [ansible-setup](https://github.com/cole-titze/ansible-setup) — see `raspberry-pi-playbooks/cluster/kubernetes/retirement-calculator/`.
+
 To expose the app publicly via [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/):
 
 1. Create a tunnel in the Cloudflare dashboard and configure it to route traffic to `http://frontend:80`
