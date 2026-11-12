@@ -4,7 +4,7 @@ name: Security Scan
 # Same setup as nhl-odds' security-scan.yml; bump the action SHA and TRIVY_VERSION together.
 on:
   schedule:
-    - cron: '0 10 * * 0'
+    - cron: '0 10 * * 6'
   workflow_dispatch:
 
 env:
